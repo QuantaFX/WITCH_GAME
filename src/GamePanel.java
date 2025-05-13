@@ -25,6 +25,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         setPreferredSize(new Dimension(800, 600));
         setBackground(Color.BLACK);
 
+
         // Check the OS
         isWindows = System.getProperty("os.name").toLowerCase().contains("win");
 
@@ -33,6 +34,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
         addKeyListener(this);
         setFocusable(true);
+
 
         // Add shutdown hook to stop music when game closes
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -45,21 +47,26 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void initGame() {
         player = new Player(100, 300, 21, 39, "assets/Blue_witch/B_witch_idle.png", 6); // Idle sprite
 
+
         // Initialize enemies ArrayList
         enemies = new ArrayList<>();
+
 
         // Add multiple enemies at different positions
         Enemy enemy1 = new Enemy(600, 300, 36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
         enemy1.setTarget(player);
         enemies.add(enemy1);
 
+
         Enemy enemy2 = new Enemy(400, 300, 36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
         enemy2.setTarget(player);
         enemies.add(enemy2);
 
+
         Enemy enemy3 = new Enemy(300, 200, 36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
         enemy3.setTarget(player);
         enemies.add(enemy3);
+
 
         platforms = new ArrayList<>();
         platforms.add(new Platform(50, 550, 700, 20));
@@ -67,10 +74,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         platforms.add(new Platform(400, 350, 150, 20));
         background = new Background();
 
+
         // Initialize background music
         // Note: Using WAV format as it's natively supported by Java Sound API
         // You can convert MP3 files to WAV using online converters or tools
         String musicFile = "assets/music/sorcer_chill_wave.wav";
+
 
         // Check if music file exists
         File file = new File(musicFile);
@@ -138,6 +147,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         for (Platform platform : platforms) {
             player.checkCollision(platform);
 
+
             // Check collision for each enemy
             for (Enemy enemy : enemies) {
                 enemy.checkCollision(platform);
@@ -153,10 +163,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             platform.draw(g);
         }
 
+
         // Draw all enemies
         for (Enemy enemy : enemies) {
             enemy.draw(g, showBounds);
         }
+
 
         player.draw(g, showBounds);
         
@@ -213,9 +225,13 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             } else if (key == KeyEvent.VK_K) {
                 // Allow triggering basic attack
                 player.basicAttack();
+            } else if (key == KeyEvent.VK_K) {
+                // Allow triggering basic attack
+                player.basicAttack();
             }
             return;
         }
+
 
         if (key == KeyEvent.VK_A) {
             player.changeSprite(21, 41, "assets/Blue_witch/B_witch_run.png", 8); // Running sprite
@@ -228,9 +244,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         } else if (key == KeyEvent.VK_F3) {
             showBounds = !showBounds;
         } else if (key == KeyEvent.VK_L) {
+        } else if (key == KeyEvent.VK_L) {
             player.startCharging(); // Start charging
         } else if (key == KeyEvent.VK_J) {
             player.attack(); // Start attack
+        } else if (key == KeyEvent.VK_K) {
+            player.basicAttack(); // Start basic attack using idle sprite
         } else if (key == KeyEvent.VK_K) {
             player.basicAttack(); // Start basic attack using idle sprite
         } else if (key == KeyEvent.VK_M) {
@@ -238,6 +257,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             toggleMusic();
         }
     }
+
 
     // Add method to toggle music
     private void toggleMusic() {
@@ -251,6 +271,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             }
         }
     }
+
 
     // Add method to stop music (useful when game closing)
     public void stopMusic() {
@@ -267,6 +288,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             player.changeSprite(21, 39, "assets/Blue_witch/B_witch_idle.png", 6); // Idle sprite
             player.stop();
         } else if (key == KeyEvent.VK_L) {  // Changed from K to L
+        } else if (key == KeyEvent.VK_L) {  // Changed from K to L
             player.stopCharging(); // Stop charging
         }
     }
@@ -276,4 +298,5 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         // Not used
     }
 }
+
 

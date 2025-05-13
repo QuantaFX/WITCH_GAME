@@ -101,7 +101,6 @@ public class Player {
     private void updateHurtbox() {
         if (isAttacking || isBasicAttacking) {
             // Set hurtbox dimensions - adjust these values as needed
-
             int hurtboxWidth;
             int hurtboxHeight;
             if (isAttacking){
@@ -111,8 +110,6 @@ public class Player {
                 hurtboxWidth = bounds.width / 2;
                 hurtboxHeight = bounds.height;
             }
-
-
 
             if (facingLeft) {
                 // Position hurtbox to the left of player
