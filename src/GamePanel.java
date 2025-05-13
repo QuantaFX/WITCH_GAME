@@ -3,6 +3,8 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class GamePanel extends JPanel implements Runnable, KeyListener {
     private Thread gameThread;
@@ -12,6 +14,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private Enemy enemy;
     private ArrayList<Platform> platforms;
     private Background background;
+    private MP3Player backgroundMusic;
 
     public GamePanel() {
         setPreferredSize(new Dimension(800, 600));
@@ -22,6 +25,13 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
         addKeyListener(this);
         setFocusable(true);
+        
+        // Add shutdown hook to stop music when game closes
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (backgroundMusic != null) {
+                backgroundMusic.stop();
+            }
+        }));
     }
 
     private void initGame() {
@@ -33,6 +43,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         platforms.add(new Platform(200, 450, 100, 20));
         platforms.add(new Platform(400, 350, 150, 20));
         background = new Background();
+        
+        // Initialize and play background music
+        backgroundMusic = new MP3Player("assets/music/sorcera_normal.mp3");
+        backgroundMusic.play(true); // Loop the music
     }
 
     private void startGame() {
@@ -110,5 +124,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     @Override
     public void keyTyped(KeyEvent e) {
         // Not used
+    }
+
+    // Add method to stop music
+    public void stopMusic() {
+        if (backgroundMusic != null) {
+            backgroundMusic.stop();
+        }
     }
 }
