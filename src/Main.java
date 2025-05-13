@@ -18,7 +18,7 @@ public class Main extends JFrame {
         gamePanel = new GamePanel();
         add(gamePanel);
         
-        // Add window listener to stop music when window is closed
+        // Add window listener to stop music when window closing
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {

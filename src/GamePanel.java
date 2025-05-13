@@ -5,6 +5,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 
 public class GamePanel extends JPanel implements Runnable, KeyListener {
     private Thread gameThread;
@@ -14,11 +15,16 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private ArrayList<Enemy> enemies;
     private ArrayList<Platform> platforms;
     private Background background;
-    private MP3Player backgroundMusic;
+    private boolean isWindows;
+    private AudioPlayer backgroundMusic; // Added audio player for background music
+    private boolean musicEnabled = true; // Flag to track if music is enabled
 
     public GamePanel() {
         setPreferredSize(new Dimension(800, 600));
         setBackground(Color.BLACK);
+        
+        // Check the OS
+        isWindows = System.getProperty("os.name").toLowerCase().contains("win");
 
         initGame();
         startGame();
@@ -59,9 +65,20 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         platforms.add(new Platform(400, 350, 150, 20));
         background = new Background();
         
-        // Initialize and play background music
-        backgroundMusic = new MP3Player("assets/music/sorcera_normal.mp3");
-        backgroundMusic.play(true); // Loop the music
+        // Initialize background music
+        // Note: Using WAV format as it's natively supported by Java Sound API
+        // You can convert MP3 files to WAV using online converters or tools
+        String musicFile = "assets/music/sorcer_chill_wave.wav";
+        
+        // Check if music file exists
+        File file = new File(musicFile);
+        if (file.exists()) {
+            backgroundMusic = new AudioPlayer(musicFile);
+            backgroundMusic.play(true); // Start playing in a loop
+        } else {
+            System.out.println("Background music file not found: " + musicFile);
+            System.out.println("Please place a WAV audio file at: " + musicFile);
+        }
     }
 
     private void startGame() {
@@ -145,6 +162,29 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             player.startCharging(); // Start charging
         } else if (key == KeyEvent.VK_J) {
             player.attack(); // Start attack
+        } else if (key == KeyEvent.VK_M) {
+            // Toggle music on/off
+            toggleMusic();
+        }
+    }
+    
+    // Add method to toggle music
+    private void toggleMusic() {
+        if (backgroundMusic != null) {
+            if (musicEnabled) {
+                backgroundMusic.stop();
+                musicEnabled = false;
+            } else {
+                backgroundMusic.play(true);
+                musicEnabled = true;
+            }
+        }
+    }
+    
+    // Add method to stop music (useful when game closing)
+    public void stopMusic() {
+        if (backgroundMusic != null) {
+            backgroundMusic.stop();
         }
     }
 
@@ -163,12 +203,5 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     @Override
     public void keyTyped(KeyEvent e) {
         // Not used
-    }
-
-    // Add method to stop music
-    public void stopMusic() {
-        if (backgroundMusic != null) {
-            backgroundMusic.stop();
-        }
     }
 }

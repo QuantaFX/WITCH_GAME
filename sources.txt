@@ -1,5 +1,4 @@
 ./src/Enemy.java
-./src/MP3Player.java
 ./src/Platform.java
 ./src/Player.java
 ./src/Main.java
