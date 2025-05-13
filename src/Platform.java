@@ -13,6 +13,6 @@ public class Platform {
 
     public void draw(Graphics g) {
         g.setColor(Color.GREEN);
-        g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+        g.drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
     }
 }

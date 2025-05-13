@@ -77,19 +77,19 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
-        if (key == KeyEvent.VK_LEFT) {
+        if (key == KeyEvent.VK_A) {
             player.changeSprite(21, 41, "assets/Blue_witch/B_witch_run.png", 8); // Running sprite
             player.moveLeft();
-        } else if (key == KeyEvent.VK_RIGHT) {
+        } else if (key == KeyEvent.VK_D) {
             player.changeSprite(21, 41, "assets/Blue_witch/B_witch_run.png", 8);
             player.moveRight();
         } else if (key == KeyEvent.VK_SPACE) {
             player.jump();
         } else if (key == KeyEvent.VK_F3) {
             showBounds = !showBounds;
-        } else if (key == KeyEvent.VK_X) {
+        } else if (key == KeyEvent.VK_K) {
             player.startCharging(); // Start charging
-        } else if (key == KeyEvent.VK_Z) {
+        } else if (key == KeyEvent.VK_J) {
             player.attack(); // Start attack
         }
     }
@@ -97,13 +97,13 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     @Override
     public void keyReleased(KeyEvent e) {
         int key = e.getKeyCode();
-        if (key == KeyEvent.VK_LEFT || key == KeyEvent.VK_RIGHT) {
+        if (key == KeyEvent.VK_A || key == KeyEvent.VK_D) {
             // Return to normal sprite
             player.changeSprite(21, 39, "assets/Blue_witch/B_witch_idle.png", 6); // Idle sprite
             player.stop();
-        } else if (key == KeyEvent.VK_X) {
+        } else if (key == KeyEvent.VK_K) {
             player.stopCharging(); // Stop charging
-        } 
+        }
     }
 
     @Override
