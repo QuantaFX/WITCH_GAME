@@ -146,8 +146,23 @@ public class Player {
             int scaledWidth = frameWidth * 3;
             int scaledHeight = frameHeight * 3;
 
-            int spriteX = bounds.x + (bounds.width - scaledWidth) / 2; // Center the sprite horizontally
-            int spriteY = bounds.y + (bounds.height - scaledHeight) / 2; // Center the sprite vertically
+            int spriteX, spriteY;
+            
+            // Exception for attacking sprites - special positioning
+            if (isAttacking) {
+                if (facingLeft) {
+                    // When attacking and facing left, position the sprite so the right side aligns with center
+                    spriteX = bounds.x + bounds.width - scaledWidth;
+                } else {
+                    // When attacking and facing right, use the default left alignment
+                    spriteX = bounds.x;
+                }
+                spriteY = bounds.y;
+            } else {
+                // Center other sprites
+                spriteX = bounds.x + (bounds.width - scaledWidth) / 2;
+                spriteY = bounds.y + (bounds.height - scaledHeight) / 2;
+            }
 
             if (facingLeft) {
                 // Flip the sprite horizontally using an offscreen buffer
@@ -165,6 +180,11 @@ public class Player {
             g.setColor(Color.RED);
             g.drawRect(bounds.x, bounds.y, bounds.width, bounds.height); // Draw consistent hitbox
         }
+    }
+
+    // Add this getter method to check if player is attacking
+    public boolean isAttacking() {
+        return isAttacking;
     }
 }
 

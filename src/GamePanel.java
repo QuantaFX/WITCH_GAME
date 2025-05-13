@@ -77,6 +77,16 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
+        
+        // If player is attacking, ignore movement inputs
+        if (player.isAttacking()) {
+            if (key == KeyEvent.VK_J) {
+                // Allow re-triggering attack
+                player.attack();
+            }
+            return;
+        }
+        
         if (key == KeyEvent.VK_A) {
             player.changeSprite(21, 41, "assets/Blue_witch/B_witch_run.png", 8); // Running sprite
             player.moveLeft();
@@ -111,3 +121,4 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         // Not used
     }
 }
+
