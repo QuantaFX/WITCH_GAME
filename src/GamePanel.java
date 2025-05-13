@@ -9,6 +9,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private boolean running = false;
     private boolean showBounds = false;
     private Player player;
+    private Enemy enemy;
     private ArrayList<Platform> platforms;
     private Background background;
 
@@ -25,6 +26,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     private void initGame() {
         player = new Player(100, 300, 21, 39, "assets/Blue_witch/B_witch_idle.png", 6); // Idle sprite
+        enemy = new Enemy(100, 300, 21, 39, "assets/Blue_witch/B_witch_idle.png", 6);
         platforms = new ArrayList<>();
         platforms.add(new Platform(50, 550, 700, 20));
         platforms.add(new Platform(200, 450, 100, 20));
@@ -54,8 +56,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void updateGame() {
         background.update(); // Update the background for parallax scrolling
         player.update();
+        enemy.update();
         for (Platform platform : platforms) {
             player.checkCollision(platform);
+            enemy.checkCollision(platform);
         }
     }
 
@@ -66,6 +70,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         for (Platform platform : platforms) {
             platform.draw(g);
         }
+        enemy.draw(g, showBounds);
         player.draw(g, showBounds);
     }
 
@@ -98,9 +103,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             player.stop();
         } else if (key == KeyEvent.VK_X) {
             player.stopCharging(); // Stop charging
-        } else if (key == KeyEvent.VK_Z) {
-            player.stopAttack(); // Stop attack
-        }
+        } 
     }
 
     @Override

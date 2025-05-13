@@ -17,6 +17,7 @@ public class Player {
     private int frameWidth;
     private int animationSpeed = 10; // Adjust for slower/faster animation
     private int animationCounter = 0;
+    private int attackCount = 0;
     private boolean facingLeft = false; // Track the direction the player is facing
     private boolean isCharging = false; // Track if the player is charging
     private boolean isAttacking = false; // Track if the player is attacking
@@ -32,6 +33,7 @@ public class Player {
             frameHeight = spriteSheet.getHeight() / frameCount;
             frameWidth = spriteSheet.getWidth();
         } catch (IOException e) {
+            System.out.println("hi");
             e.printStackTrace();
         }
     }
@@ -45,7 +47,16 @@ public class Player {
         animationCounter++;
         if (animationCounter >= animationSpeed) {
             currentFrame = (currentFrame + 1) % frameCount;
+
+            if(isAttacking){
+                attackCount++;
+            }
+            if(attackCount >= 9){
+                stopAttack();
+                attackCount = 0;
+            }
             animationCounter = 0;
+
         }
 
         // If charging or attacking, prevent movement
@@ -119,6 +130,7 @@ public class Player {
             frameHeight = spriteSheet.getHeight() / frameCount;
             frameWidth = spriteSheet.getWidth();
         } catch (IOException e) {
+            System.out.println("hii");
             e.printStackTrace();
         }
 
