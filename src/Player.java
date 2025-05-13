@@ -56,7 +56,6 @@ public class Player {
                 attackCount = 0;
             }
             animationCounter = 0;
-
         }
 
         // If charging or attacking, prevent movement
@@ -112,6 +111,8 @@ public class Player {
         if (!isAttacking) {
             isAttacking = true;
             changeSprite(104, 45, "assets/Blue_witch/B_witch_attack.png", 9); // Attack sprite
+            currentFrame = 0; // Reset animation to first frame
+            animationCounter = 0; // Reset animation counter to avoid immediate frame progression
         }
     }
 

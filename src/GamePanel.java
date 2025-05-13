@@ -83,7 +83,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         } else if (key == KeyEvent.VK_D) {
             player.changeSprite(21, 41, "assets/Blue_witch/B_witch_run.png", 8);
             player.moveRight();
-        } else if (key == KeyEvent.VK_SPACE) {
+        } else if (key == KeyEvent.VK_SPACE || key == KeyEvent.VK_W) {
             player.jump();
         } else if (key == KeyEvent.VK_F3) {
             showBounds = !showBounds;
