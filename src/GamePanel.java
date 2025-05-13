@@ -26,7 +26,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     private void initGame() {
         player = new Player(100, 300, 21, 39, "assets/Blue_witch/B_witch_idle.png", 6); // Idle sprite
-        enemy = new Enemy(100, 300, 21, 39, "assets/Blue_witch/B_witch_idle.png", 6);
+        enemy = new Enemy(600, 300, 36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
+        enemy.setTarget(player); // Set player as the enemy's target
         platforms = new ArrayList<>();
         platforms.add(new Platform(50, 550, 700, 20));
         platforms.add(new Platform(200, 450, 100, 20));

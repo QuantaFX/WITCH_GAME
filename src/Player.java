@@ -166,5 +166,21 @@ public class Player {
             g.drawRect(bounds.x, bounds.y, bounds.width, bounds.height); // Draw consistent hitbox
         }
     }
+
+    public Rectangle getBounds() {
+        return bounds;
+    }
+    
+    public int getSpeedY() {
+        return speedY;
+    }
+    
+    public void setSpeedX(int speedX) {
+        this.speedX = speedX;
+    }
+    
+    public void setFacingLeft(boolean facingLeft) {
+        this.facingLeft = facingLeft;
+    }
 }
 
