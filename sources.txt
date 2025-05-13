@@ -1,4 +1,5 @@
 ./src/Enemy.java
+./src/AudioPlayer.java
 ./src/Platform.java
 ./src/Player.java
 ./src/Main.java

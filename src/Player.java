@@ -10,6 +10,14 @@ public class Player {
     private int speedX = 0, speedY = 0;
     private final int GRAVITY = 1;
     private final int JUMP_STRENGTH = -15;
+    
+    // HP and damage system
+    private int maxHP = 100;
+    private int currentHP = 100;
+    private int attackDamage = 20;
+    private boolean invulnerable = false;
+    private int invulnerabilityTimer = 0;
+    private final int INVULNERABILITY_DURATION = 30; // frames of invulnerability after being hit
 
     private BufferedImage spriteSheet;
     private int frameCount;
@@ -67,6 +75,15 @@ public class Player {
         
         // Update hurtbox position based on player position and direction
         updateHurtbox();
+        
+        // Update invulnerability timer
+        if (invulnerable) {
+            invulnerabilityTimer++;
+            if (invulnerabilityTimer >= INVULNERABILITY_DURATION) {
+                invulnerable = false;
+                invulnerabilityTimer = 0;
+            }
+        }
     }
     
     // Method to update hurtbox position
@@ -166,8 +183,9 @@ public class Player {
             frameHeight = spriteSheet.getHeight() / frameCount;
             frameWidth = spriteSheet.getWidth();
         } catch (IOException e) {
-            System.out.println("hii");
-            e.printStackTrace();
+            System.out.println("Error loading sprite: " + spriteFile);
+            // Don't change frameHeight or frameWidth if loading fails
+            // This keeps the current sprite
         }
 
         // The hitbox (bounds) remains unchanged, so no adjustments to `bounds` are made here.
@@ -175,40 +193,50 @@ public class Player {
 
     public void draw(Graphics g, boolean showBounds) {
         if (spriteSheet != null) {
-            BufferedImage currentSprite = spriteSheet.getSubimage(0, currentFrame * frameHeight, frameWidth, frameHeight);
+            // If invulnerable, flash the sprite (appear every other frame)
+            if (invulnerable && invulnerabilityTimer % 4 < 2) {
+                // Skip drawing the sprite to create flashing effect
+            } else {
+                try {
+                    BufferedImage currentSprite = spriteSheet.getSubimage(0, currentFrame * frameHeight, frameWidth, frameHeight);
 
-            // Scale the sprite by 3x
-            int scaledWidth = frameWidth * 3;
-            int scaledHeight = frameHeight * 3;
+                    // Scale the sprite by 3x
+                    int scaledWidth = frameWidth * 3;
+                    int scaledHeight = frameHeight * 3;
 
-            int spriteX, spriteY;
-            
-            // Exception for attacking sprites - special positioning
-            if (isAttacking) {
-                if (facingLeft) {
-                    // When attacking and facing left, position the sprite so the right side aligns with center
-                    spriteX = bounds.x + bounds.width - scaledWidth;
-                } else {
-                    // When attacking and facing right, use the default left alignment
-                    spriteX = bounds.x;
+                    int spriteX, spriteY;
+                    
+                    // Exception for attacking sprites - special positioning
+                    if (isAttacking) {
+                        if (facingLeft) {
+                            // When attacking and facing left, position the sprite so the right side aligns with center
+                            spriteX = bounds.x + bounds.width - scaledWidth;
+                        } else {
+                            // When attacking and facing right, use the default left alignment
+                            spriteX = bounds.x;
+                        }
+                        spriteY = bounds.y;
+                    } else {
+                        // Center other sprites
+                        spriteX = bounds.x + (bounds.width - scaledWidth) / 2;
+                        spriteY = bounds.y + (bounds.height - scaledHeight) / 2;
+                    }
+
+                    if (facingLeft) {
+                        // Flip the sprite horizontally using an offscreen buffer
+                        BufferedImage flippedSprite = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_ARGB);
+                        Graphics2D g2d = flippedSprite.createGraphics();
+                        g2d.drawImage(currentSprite, scaledWidth, 0, -scaledWidth, scaledHeight, null);
+                        g2d.dispose();
+
+                        g.drawImage(flippedSprite, spriteX, spriteY, scaledWidth, scaledHeight, null);
+                    } else {
+                        g.drawImage(currentSprite, spriteX, spriteY, scaledWidth, scaledHeight, null);
+                    }
+                } catch (Exception e) {
+                    // Handle sprite rendering errors gracefully
+                    System.out.println("Error rendering sprite: " + e.getMessage());
                 }
-                spriteY = bounds.y;
-            } else {
-                // Center other sprites
-                spriteX = bounds.x + (bounds.width - scaledWidth) / 2;
-                spriteY = bounds.y + (bounds.height - scaledHeight) / 2;
-            }
-
-            if (facingLeft) {
-                // Flip the sprite horizontally using an offscreen buffer
-                BufferedImage flippedSprite = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_ARGB);
-                Graphics2D g2d = flippedSprite.createGraphics();
-                g2d.drawImage(currentSprite, scaledWidth, 0, -scaledWidth, scaledHeight, null);
-                g2d.dispose();
-
-                g.drawImage(flippedSprite, spriteX, spriteY, scaledWidth, scaledHeight, null);
-            } else {
-                g.drawImage(currentSprite, spriteX, spriteY, scaledWidth, scaledHeight, null);
             }
         }
         
@@ -223,6 +251,71 @@ public class Player {
                 g.drawRect(hurtbox.x, hurtbox.y, hurtbox.width, hurtbox.height); // Draw hurtbox outline
             }
         }
+        
+        // Draw health bar
+        drawHealthBar(g);
+    }
+    
+    // Method to draw the health bar above the player
+    private void drawHealthBar(Graphics g) {
+        int barWidth = bounds.width;
+        int barHeight = 5;
+        int barX = bounds.x;
+        int barY = bounds.y - 10;
+        
+        // Background (empty health)
+        g.setColor(Color.RED);
+        g.fillRect(barX, barY, barWidth, barHeight);
+        
+        // Foreground (current health)
+        g.setColor(Color.GREEN);
+        int currentWidth = (int)(((double)currentHP / maxHP) * barWidth);
+        g.fillRect(barX, barY, currentWidth, barHeight);
+        
+        // Border
+        g.setColor(Color.BLACK);
+        g.drawRect(barX, barY, barWidth, barHeight);
+    }
+    
+    // Method to take damage
+    public void takeDamage(int damage) {
+        if (!invulnerable) {
+            currentHP -= damage;
+            if (currentHP < 0) currentHP = 0;
+            invulnerable = true;
+            invulnerabilityTimer = 0;
+        }
+    }
+    
+    // Method to heal
+    public void heal(int amount) {
+        currentHP += amount;
+        if (currentHP > maxHP) currentHP = maxHP;
+    }
+    
+    // Check if player is dead
+    public boolean isDead() {
+        return currentHP <= 0;
+    }
+    
+    // Get attack damage
+    public int getAttackDamage() {
+        return attackDamage;
+    }
+    
+    // Get current HP
+    public int getCurrentHP() {
+        return currentHP;
+    }
+    
+    // Get max HP
+    public int getMaxHP() {
+        return maxHP;
+    }
+    
+    // Check if player is invulnerable
+    public boolean isInvulnerable() {
+        return invulnerable;
     }
 
     // Add this getter method to check if player is attacking

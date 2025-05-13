@@ -10,6 +10,17 @@ public class Enemy extends Player {
     private final int Y_LEVEL_TOLERANCE = 2; // Tolerance for Y-level difference
     private int originalWidth; // Store original width for sprite rendering
     
+    // Attack properties
+    private int attackDamage = 10;
+    private int attackCooldown = 0;
+    private final int MAX_ATTACK_COOLDOWN = 60; // 1 second at 60 FPS
+    private boolean canAttack = true;
+    
+    // Enemy state management
+    private boolean frozen = false;
+    private int frozenTimer = 0;
+    private final int FROZEN_DURATION = 45; // 0.75 seconds at 60 FPS
+    
     public Enemy(int x, int y, int width, int height, String spriteFile, int frameCount){
         // Use half width for the bounds/hitbox
         super(x, y, width - 18, height, spriteFile, frameCount);
@@ -22,18 +33,24 @@ public class Enemy extends Player {
     
     @Override
     public void moveLeft() {
+        // Don't move if frozen
+        if (frozen) return;
+        
         setSpeedX(-followSpeed);
         setFacingLeft(true);
     }
     
     @Override
     public void moveRight() {
+        // Don't move if frozen
+        if (frozen) return;
+        
         setSpeedX(followSpeed);
         setFacingLeft(false);
     }
     
     public void followTarget() {
-        if (target == null) return;
+        if (target == null || frozen) return;
         
         followDelay++;
         if (followDelay < MAX_FOLLOW_DELAY) {
@@ -50,10 +67,10 @@ public class Enemy extends Player {
         if (yDifference <= Y_LEVEL_TOLERANCE) {
             // Player is at same level, follow them
             if (targetBounds.x < myBounds.x) {
-                changeSprite(36, 28, "assets/Orc_Sprite/orc_run.png", 4);
+                changeSprite(47, 28, "assets/Orc_Sprite/orc_walk.png", 8);
                 moveLeft();
             } else if (targetBounds.x > myBounds.x) {
-                changeSprite(36, 28, "assets/Orc_Sprite/orc_run.png", 4);
+                changeSprite(47, 28, "assets/Orc_Sprite/orc_walk.png", 8);
                 moveRight();
             } else {
                 changeSprite(36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
@@ -66,18 +83,79 @@ public class Enemy extends Player {
         }
     }
     
+    // Check if this enemy is colliding with the player
+    public boolean isCollidingWithPlayer() {
+        if (target == null) return false;
+        return getBounds().intersects(target.getBounds());
+    }
+    
+    // Attack the player
+    public void attackPlayer() {
+        if (target == null || !canAttack || frozen) return;
+        
+        if (isCollidingWithPlayer() && !target.isInvulnerable()) {
+            try {
+                // Show attack animation
+                changeSprite(64, 28, "assets/Orc_Sprite/orc_hit.png", 6);
+            } catch (Exception e) {
+                // If attack sprite fails to load, fall back to idle sprite
+                changeSprite(36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
+            }
+            
+            // Deal damage to player
+            target.takeDamage(attackDamage);
+            
+            // Set cooldown
+            canAttack = false;
+            attackCooldown = 0;
+        }
+    }
+    
+    // Freeze enemy when hit by player
+    public void freeze() {
+        frozen = true;
+        frozenTimer = 0;
+        setSpeedX(0); // Stop movement
+    }
+    
+    @Override
+    public void takeDamage(int damage) {
+        super.takeDamage(damage);
+        freeze(); // Freeze enemy when taking damage
+    }
+    
     @Override
     public void update() {
-        if (target != null) {
-            followTarget();
+        // Update frozen state
+        if (frozen) {
+            frozenTimer++;
+            if (frozenTimer >= FROZEN_DURATION) {
+                frozen = false;
+                // Return to idle sprite after being frozen
+                changeSprite(36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
+            }
         }
+        
+        if (!frozen) {
+            if (target != null) {
+                followTarget();
+                attackPlayer();
+            }
+            
+            // Update attack cooldown
+            if (!canAttack) {
+                attackCooldown++;
+                if (attackCooldown >= MAX_ATTACK_COOLDOWN) {
+                    canAttack = true;
+                    // Return to idle sprite after attack cooldown
+                    if (!frozen) {
+                        changeSprite(36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
+                    }
+                }
+            }
+        }
+        
         super.update();
-        
-        // Adjust hitbox position based on facing direction after movement update
-        Rectangle bounds = getBounds();
-        boolean facingLeft = isFacingLeft();
-        
-        // For sprite rendering, we'll handle this in the draw method
     }
     
     @Override
@@ -135,8 +213,29 @@ public class Enemy extends Player {
     // Override changeSprite to ensure our width settings are preserved
     @Override
     public void changeSprite(int width, int height, String spriteFile, int frameCount) {
-        // Call the parent changeSprite method
-        super.changeSprite(width/2, height, spriteFile, frameCount);
-        this.originalWidth = width;
+        try {
+            // Call the parent changeSprite method
+            super.changeSprite(width/2, height, spriteFile, frameCount);
+            this.originalWidth = width;
+        } catch (Exception e) {
+            // If sprite fails to load, just continue with current sprite
+            System.out.println("Failed to load sprite: " + spriteFile);
+        }
+    }
+    
+    // Set attack damage
+    public void setAttackDamage(int damage) {
+        this.attackDamage = damage;
+    }
+    
+    // Get attack damage
+    @Override
+    public int getAttackDamage() {
+        return attackDamage;
+    }
+    
+    // Check if enemy is frozen
+    public boolean isFrozen() {
+        return frozen;
     }
 }

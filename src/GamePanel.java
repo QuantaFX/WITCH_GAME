@@ -6,6 +6,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.util.Iterator;
 
 public class GamePanel extends JPanel implements Runnable, KeyListener {
     private Thread gameThread;
@@ -18,6 +19,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private boolean isWindows;
     private AudioPlayer backgroundMusic; // Added audio player for background music
     private boolean musicEnabled = true; // Flag to track if music is enabled
+    private boolean gameOver = false; // Flag to track if game is over
 
     public GamePanel() {
         setPreferredSize(new Dimension(800, 600));
@@ -101,14 +103,38 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
 
     private void updateGame() {
+        if (gameOver) {
+            return; // Don't update if game is over
+        }
+        
         background.update(); // Update the background for parallax scrolling
         player.update();
         
-        // Update all enemies
-        for (Enemy enemy : enemies) {
-            enemy.update();
+        // Check if player is dead
+        if (player.isDead()) {
+            gameOver = true;
+            return;
         }
         
+        // Update all enemies and check for player attack collisions
+        Iterator<Enemy> enemyIterator = enemies.iterator();
+        while (enemyIterator.hasNext()) {
+            Enemy enemy = enemyIterator.next();
+            enemy.update();
+            
+            // If player is attacking, check if attack hits enemy
+            if (player.isAttacking() && player.getHurtbox().intersects(enemy.getBounds())) {
+                enemy.takeDamage(player.getAttackDamage());
+                
+                // Remove dead enemies
+                if (enemy.isDead()) {
+                    enemyIterator.remove();
+                    continue;
+                }
+            }
+        }
+        
+        // Check platform collisions
         for (Platform platform : platforms) {
             player.checkCollision(platform);
             
@@ -133,11 +159,51 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
         
         player.draw(g, showBounds);
+        
+        // Draw game over screen if needed
+        if (gameOver) {
+            drawGameOver(g);
+        }
+    }
+    
+    // Draw game over screen
+    private void drawGameOver(Graphics g) {
+        g.setColor(new Color(0, 0, 0, 200)); // Semi-transparent black
+        g.fillRect(0, 0, getWidth(), getHeight());
+        
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 50));
+        FontMetrics metrics = g.getFontMetrics();
+        String message = "GAME OVER";
+        int x = (getWidth() - metrics.stringWidth(message)) / 2;
+        int y = getHeight() / 2;
+        g.drawString(message, x, y);
+        
+        g.setFont(new Font("Arial", Font.PLAIN, 20));
+        metrics = g.getFontMetrics();
+        message = "Press R to restart";
+        x = (getWidth() - metrics.stringWidth(message)) / 2;
+        y = getHeight() / 2 + 50;
+        g.drawString(message, x, y);
+    }
+    
+    // Reset the game
+    private void resetGame() {
+        gameOver = false;
+        initGame();
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
+        
+        // Handle game over state
+        if (gameOver) {
+            if (key == KeyEvent.VK_R) {
+                resetGame();
+            }
+            return;
+        }
         
         // If player is attacking, ignore movement inputs
         if (player.isAttacking()) {
