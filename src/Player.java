@@ -250,5 +250,25 @@ public class Player {
     public void setFacingLeft(boolean facingLeft) {
         this.facingLeft = facingLeft;
     }
-}
 
+    // Add getters for protected fields needed by Enemy class
+    protected BufferedImage getSpriteSheet() {
+        return spriteSheet;
+    }
+    
+    protected int getCurrentFrame() {
+        return currentFrame;
+    }
+    
+    protected int getFrameHeight() {
+        return frameHeight;
+    }
+    
+    protected int getFrameWidth() {
+        return frameWidth;
+    }
+    
+    protected boolean isFacingLeft() {
+        return facingLeft;
+    }
+}
