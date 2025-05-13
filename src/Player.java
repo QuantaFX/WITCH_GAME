@@ -186,5 +186,21 @@ public class Player {
     public boolean isAttacking() {
         return isAttacking;
     }
+
+    public Rectangle getBounds() {
+        return bounds;
+    }
+
+    public int getSpeedY() {
+        return speedY;
+    }
+
+    public void setSpeedX(int speedX) {
+        this.speedX = speedX;
+    }
+
+    public void setFacingLeft(boolean facingLeft) {
+        this.facingLeft = facingLeft;
+    }
 }
 

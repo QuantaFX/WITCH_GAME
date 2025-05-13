@@ -9,7 +9,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private boolean running = false;
     private boolean showBounds = false;
     private Player player;
-    private Enemy enemy;
+    private ArrayList<Enemy> enemies;
     private ArrayList<Platform> platforms;
     private Background background;
 
@@ -26,8 +26,23 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     private void initGame() {
         player = new Player(100, 300, 21, 39, "assets/Blue_witch/B_witch_idle.png", 6); // Idle sprite
-        enemy = new Enemy(600, 300, 36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
-        enemy.setTarget(player); // Set player as the enemy's target
+        
+        // Initialize enemies ArrayList
+        enemies = new ArrayList<>();
+        
+        // Add multiple enemies at different positions
+        Enemy enemy1 = new Enemy(600, 300, 36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
+        enemy1.setTarget(player);
+        enemies.add(enemy1);
+        
+        Enemy enemy2 = new Enemy(400, 300, 36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
+        enemy2.setTarget(player);
+        enemies.add(enemy2);
+        
+        Enemy enemy3 = new Enemy(300, 200, 36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
+        enemy3.setTarget(player);
+        enemies.add(enemy3);
+        
         platforms = new ArrayList<>();
         platforms.add(new Platform(50, 550, 700, 20));
         platforms.add(new Platform(200, 450, 100, 20));
@@ -57,10 +72,19 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void updateGame() {
         background.update(); // Update the background for parallax scrolling
         player.update();
-        enemy.update();
+        
+        // Update all enemies
+        for (Enemy enemy : enemies) {
+            enemy.update();
+        }
+        
         for (Platform platform : platforms) {
             player.checkCollision(platform);
-            enemy.checkCollision(platform);
+            
+            // Check collision for each enemy
+            for (Enemy enemy : enemies) {
+                enemy.checkCollision(platform);
+            }
         }
     }
 
@@ -71,7 +95,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         for (Platform platform : platforms) {
             platform.draw(g);
         }
-        enemy.draw(g, showBounds);
+        
+        // Draw all enemies
+        for (Enemy enemy : enemies) {
+            enemy.draw(g, showBounds);
+        }
+        
         player.draw(g, showBounds);
     }
 
@@ -122,4 +151,3 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         // Not used
     }
 }
-
