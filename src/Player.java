@@ -46,6 +46,12 @@ public class Player {
         if (animationCounter >= animationSpeed) {
             currentFrame = (currentFrame + 1) % frameCount;
             animationCounter = 0;
+            
+            // If attacking and just completed the animation cycle, stop the attack
+            if (isAttacking && currentFrame == 0) {
+                isAttacking = false;
+                changeSprite(21, 39, "assets/Blue_witch/B_witch_idle.png", 6); // Return to idle sprite
+            }
         }
 
         // If charging or attacking, prevent movement
@@ -101,6 +107,8 @@ public class Player {
         if (!isAttacking) {
             isAttacking = true;
             changeSprite(104, 45, "assets/Blue_witch/B_witch_attack.png", 9); // Attack sprite
+            currentFrame = 0; // Reset animation to first frame
+            animationCounter = 0; // Reset animation counter to avoid immediate frame progression
         }
     }
 

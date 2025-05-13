@@ -98,8 +98,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             player.stop();
         } else if (key == KeyEvent.VK_K) {
             player.stopCharging(); // Stop charging
-        } else if (key == KeyEvent.VK_J) {
-            player.stopAttack(); // Stop attack
         }
     }
 
