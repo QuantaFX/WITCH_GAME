@@ -6,6 +6,7 @@ import java.io.IOException;
 
 public class Player {
     private Rectangle bounds;
+    private Rectangle hurtbox; // Added hurtbox for attack collision detection
     private int speedX = 0, speedY = 0;
     private final int GRAVITY = 1;
     private final int JUMP_STRENGTH = -15;
@@ -26,6 +27,7 @@ public class Player {
         int scaledWidth = width*3;
         int scaledHeight = height*3;
         bounds = new Rectangle(x, y, scaledWidth, scaledHeight);
+        hurtbox = new Rectangle(0, 0, 0, 0); // Initialize empty hurtbox
         this.frameCount = frameCount;
 
         try {
@@ -61,6 +63,39 @@ public class Player {
         // If charging or attacking, prevent movement
         if (isCharging || isAttacking) {
             speedX = 0;
+        }
+        
+        // Update hurtbox position based on player position and direction
+        updateHurtbox();
+    }
+    
+    // Method to update hurtbox position
+    private void updateHurtbox() {
+        if (isAttacking) {
+            // Set hurtbox dimensions - adjust these values as needed
+            int hurtboxWidth = bounds.width * 4; // Half the width of player
+            int hurtboxHeight = bounds.height; // Half the height of player
+            
+            if (facingLeft) {
+                // Position hurtbox to the left of player
+                hurtbox.setBounds(
+                    bounds.x - hurtboxWidth,  // Position left of player
+                    bounds.y + bounds.height/4, // Center vertically
+                    hurtboxWidth,
+                    hurtboxHeight
+                );
+            } else {
+                // Position hurtbox to the right of player
+                hurtbox.setBounds(
+                    bounds.x + bounds.width,  // Position right of player
+                    bounds.y + bounds.height/4, // Center vertically
+                    hurtboxWidth,
+                    hurtboxHeight
+                );
+            }
+        } else {
+            // If not attacking, set hurtbox to zero size
+            hurtbox.setBounds(0, 0, 0, 0);
         }
     }
 
@@ -176,15 +211,28 @@ public class Player {
                 g.drawImage(currentSprite, spriteX, spriteY, scaledWidth, scaledHeight, null);
             }
         }
+        
+        // Draw the player's hitbox if showBounds is true
         if (showBounds) {
             g.setColor(Color.RED);
             g.drawRect(bounds.x, bounds.y, bounds.width, bounds.height); // Draw consistent hitbox
+            
+            // Only draw the hurtbox when debug mode (showBounds) is active
+            if (isAttacking && hurtbox.width > 0) {
+                g.setColor(Color.GREEN);
+                g.drawRect(hurtbox.x, hurtbox.y, hurtbox.width, hurtbox.height); // Draw hurtbox outline
+            }
         }
     }
 
     // Add this getter method to check if player is attacking
     public boolean isAttacking() {
         return isAttacking;
+    }
+    
+    // Add getter for hurtbox
+    public Rectangle getHurtbox() {
+        return hurtbox;
     }
 
     public Rectangle getBounds() {
