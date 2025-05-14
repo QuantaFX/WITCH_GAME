@@ -135,7 +135,7 @@ public class Enemy extends Player {
             }
         }
         
-        // Call parent update but skip the hit animation logic
+        // Call parent update which includes bounds checking
         super.update();
     }
     

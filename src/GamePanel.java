@@ -23,6 +23,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private boolean musicEnabled = true; // Flag to track if music is enabled
     private boolean gameOver = false; // Flag to track if game is over
     private Random random = new Random(); // For random heart drops
+    
+    // Level management
+    private LevelManager levelManager;
+    private boolean levelCompleted = false;
+    private int levelCompletedTimer = 0;
+    private final int LEVEL_TRANSITION_TIME = 120; // 2 seconds at 60 FPS
 
     // Track if player is currently in an attack state
     private boolean playerWasAttacking = false;
@@ -53,29 +59,18 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
 
     private void initGame() {
+        // Initialize player with default position (will be overridden by level data)
         player = new Player(100, 300, 21, 39, "assets/Blue_witch/B_witch_idle.png", 6); // Idle sprite
 
-        // Initialize enemies ArrayList
+        // Initialize collections
         enemies = new ArrayList<>();
-
-        // Add multiple enemies at different positions
-        Enemy enemy1 = new Enemy(600, 300, 36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
-        enemy1.setTarget(player);
-        enemies.add(enemy1);
-
-        Enemy enemy2 = new Enemy(400, 300, 36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
-        enemy2.setTarget(player);
-        enemies.add(enemy2);
-
-        Enemy enemy3 = new Enemy(300, 200, 36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
-        enemy3.setTarget(player);
-        enemies.add(enemy3);
-
-        // Initialize hearts ArrayList
-        hearts = new ArrayList<>();
-
         platforms = new ArrayList<>();
-        platforms.add(new Platform(-35, 472, 874, 106));
+        hearts = new ArrayList<>();
+        
+        // Initialize level manager and load first level
+        levelManager = new LevelManager(player);
+        loadCurrentLevel();
+
         background = new Background();
 
         // Initialize background music
@@ -92,6 +87,37 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             System.out.println("Background music file not found: " + musicFile);
             System.out.println("Please place a WAV audio file at: " + musicFile);
         }
+    }
+    
+    private void loadCurrentLevel() {
+        Level level = levelManager.getCurrentLevel();
+        if (level == null) {
+            System.out.println("Error: No level loaded");
+            return;
+        }
+        
+        // Clear existing game objects
+        platforms.clear();
+        enemies.clear();
+        hearts.clear();
+        
+        // Load platforms
+        platforms.addAll(level.getPlatforms());
+        
+        // Load enemies
+        for (Enemy enemy : level.getEnemies()) {
+            enemy.setTarget(player);
+            enemies.add(enemy);
+        }
+        
+        // Set player position
+        Point startPos = level.getPlayerStartPosition();
+        System.out.println("GamePanel - Setting player position to: " + startPos.x + ", " + startPos.y);
+        player.setPosition(startPos.x, startPos.y);
+        System.out.println("GamePanel - Player position after setting: " + player.getBounds().x + ", " + player.getBounds().y);
+        
+        levelCompleted = false;
+        levelCompletedTimer = 0;
     }
 
     private void startGame() {
@@ -116,6 +142,20 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void updateGame() {
         if (gameOver) {
             return; // Don't update if game is over
+        }
+        
+        // Handle level transition
+        if (levelCompleted) {
+            levelCompletedTimer++;
+            if (levelCompletedTimer >= LEVEL_TRANSITION_TIME) {
+                if (levelManager.moveToNextLevel()) {
+                    loadCurrentLevel();
+                } else {
+                    // No more levels, game completed
+                    gameOver = true;
+                }
+            }
+            return;
         }
         
         background.update(); // Update the background for parallax scrolling
@@ -190,14 +230,31 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 enemy.checkCollision(platform);
             }
         }
+        
+        // Check door collision for level transition
+        Level currentLevel = levelManager.getCurrentLevel();
+        if (currentLevel != null && currentLevel.hasDoor()) {
+            Door door = currentLevel.getDoor();
+            if (door.isActive() && player.getBounds().intersects(door.getBounds())) {
+                levelCompleted = true;
+            }
+        }
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         background.draw(g);
+        
+        // Draw all platforms
         for (Platform platform : platforms) {
             platform.draw(g);
+        }
+        
+        // Draw door if exists in current level
+        Level currentLevel = levelManager.getCurrentLevel();
+        if (currentLevel != null && currentLevel.hasDoor()) {
+            currentLevel.getDoor().draw(g);
         }
 
         // Draw all hearts
@@ -212,9 +269,39 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
         player.draw(g, showBounds);
         
+        // Draw level transition screen
+        if (levelCompleted) {
+            drawLevelTransition(g);
+        }
+        
         // Draw game over screen if needed
         if (gameOver) {
             drawGameOver(g);
+        }
+        
+        // Draw level info
+        drawLevelInfo(g);
+    }
+    
+    private void drawLevelInfo(Graphics g) {
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 14));
+        g.drawString("Level: " + (levelManager.getCurrentLevelIndex() + 1), 10, 20);
+    }
+    
+    private void drawLevelTransition(Graphics g) {
+        float alpha = Math.min(1.0f, (float)levelCompletedTimer / LEVEL_TRANSITION_TIME);
+        g.setColor(new Color(0, 0, 0, alpha));
+        g.fillRect(0, 0, getWidth(), getHeight());
+        
+        if (alpha > 0.5f) {
+            g.setColor(new Color(1.0f, 1.0f, 1.0f, (alpha - 0.5f) * 2));
+            g.setFont(new Font("Arial", Font.BOLD, 40));
+            FontMetrics metrics = g.getFontMetrics();
+            String message = "Level " + (levelManager.getCurrentLevelIndex() + 2);
+            int x = (getWidth() - metrics.stringWidth(message)) / 2;
+            int y = getHeight() / 2;
+            g.drawString(message, x, y);
         }
     }
     
@@ -226,7 +313,19 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 50));
         FontMetrics metrics = g.getFontMetrics();
-        String message = "GAME OVER";
+        
+        String message;
+        if (levelManager.getCurrentLevelIndex() >= levelManager.getLevels().size() - 1 && enemies.isEmpty()) {
+            message = "YOU WIN!";
+        } else {
+            // Check if player fell off the screen
+            if (player.getBounds().y > 600) {
+                message = "YOU FELL!";
+            } else {
+                message = "GAME OVER";
+            }
+        }
+        
         int x = (getWidth() - metrics.stringWidth(message)) / 2;
         int y = getHeight() / 2;
         g.drawString(message, x, y);
@@ -253,6 +352,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             if (key == KeyEvent.VK_R) {
                 resetGame();
             }
+            return;
+        }
+        
+        // Don't process inputs during level transition
+        if (levelCompleted) {
             return;
         }
 

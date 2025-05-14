@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<level>
+  <platforms>
+    <platform height="20" width="980" x="-129" y="506"/>
+    <platform height="20" width="472" x="-407" y="156"/>
+    <platform height="176" width="1372" x="-190" y="413"/>
+  </platforms>
+  <enemies>
+    <enemy x="269" y="249"/>
+    <enemy x="157" y="249"/>
+    <enemy x="585" y="225"/>
+    <enemy x="434" y="232"/>
+  </enemies>
+  <player x="25" y="-14"/>
+</level>

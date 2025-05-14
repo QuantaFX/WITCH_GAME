@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<level>
+  <platforms>
+    <platform height="20" width="180" x="-103" y="502"/>
+    <platform height="20" width="20" x="439" y="447"/>
+    <platform height="20" width="30" x="548" y="475"/>
+    <platform height="20" width="219" x="641" y="411"/>
+    <platform height="20" width="45" x="525" y="345"/>
+    <platform height="21" width="26" x="407" y="301"/>
+    <platform height="20" width="43" x="115" y="240"/>
+    <platform height="20" width="394" x="-352" y="176"/>
+    <platform height="20" width="78" x="240" y="308"/>
+    <platform height="20" width="34" x="170" y="473"/>
+    <platform height="20" width="45" x="305" y="499"/>
+    <platform height="20" width="280" x="654" y="209"/>
+    <platform height="20" width="106" x="478" y="143"/>
+    <platform height="20" width="230" x="155" y="91"/>
+    <platform height="50" width="80" x="277" y="456"/>
+  </platforms>
+  <enemies>
+    <enemy x="733" y="252"/>
+    <enemy x="263" y="-68"/>
+    <enemy x="278" y="164"/>
+  </enemies>
+  <player x="189" y="312"/>
+  <door height="100" width="37" x="774" y="110"/>
+</level>

@@ -1,8 +1,11 @@
+./src/Door.java
 ./src/Enemy.java
 ./src/AudioPlayer.java
 ./src/Heart.java
 ./src/Platform.java
+./src/LevelManager.java
 ./src/Player.java
 ./src/Main.java
 ./src/GamePanel.java
 ./src/Background.java
+./src/Level.java

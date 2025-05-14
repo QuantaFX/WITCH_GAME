@@ -76,8 +76,31 @@ public class Player {
 
     public void update() {
         speedY += GRAVITY;
-        bounds.x += speedX;
-        bounds.y += speedY;
+        
+        // Calculate new position
+        int newX = bounds.x + speedX;
+        int newY = bounds.y + speedY;
+        
+        // Prevent going out of left window bound
+        if (newX < 0) {
+            newX = 0;
+        }
+        
+        // Prevent going out of right window bound (assuming window width is 800)
+        if (newX + bounds.width > 800) {
+            newX = 800 - bounds.width;
+        }
+        
+        // Update position
+        bounds.x = newX;
+        bounds.y = newY;
+        
+        // Check if player has fallen off the screen
+        if (bounds.y > 600) { // Assuming window height is 600
+            // Player has fallen - set HP to 0 to trigger death
+            currentHP = 0;
+            // No need to reset position since the game will handle death
+        }
 
         // Update animation frame
         animationCounter++;
@@ -187,9 +210,22 @@ public class Player {
 
     public void checkCollision(Platform platform) {
         if (bounds.intersects(platform.getBounds())) {
-            if (bounds.y + bounds.height - speedY <= platform.getBounds().y) {
-                bounds.y = platform.getBounds().y - bounds.height;
+            Rectangle platformBounds = platform.getBounds();
+            
+            // Check collision with top of platform (landing)
+            if (bounds.y + bounds.height - speedY <= platformBounds.y) {
+                bounds.y = platformBounds.y - bounds.height;
                 speedY = 0;
+            }
+            // Check collision with left side of platform (wall on right)
+            else if (bounds.x + bounds.width - speedX <= platformBounds.x) {
+                bounds.x = platformBounds.x - bounds.width;
+                speedX = 0;
+            }
+            // Check collision with right side of platform (wall on left)
+            else if (bounds.x - speedX >= platformBounds.x + platformBounds.width) {
+                bounds.x = platformBounds.x + platformBounds.width;
+                speedX = 0;
             }
         }
     }
@@ -596,5 +632,10 @@ public class Player {
 
     protected boolean isFacingLeft() {
         return facingLeft;
+    }
+
+    public void setPosition(int x, int y) {
+        bounds.x = x;
+        bounds.y = y;
     }
 }
