@@ -15,10 +15,10 @@ public class Background {
         offsets = new double[4];
 
         try {
-            layers[0] = ImageIO.read(new File("assets/Clouds/Clouds 2/1.png")); // Farthest layer
-            layers[1] = ImageIO.read(new File("assets/Clouds/Clouds 2/2.png"));
-            layers[2] = ImageIO.read(new File("assets/Clouds/Clouds 2/3.png"));
-            layers[3] = ImageIO.read(new File("assets/Clouds/Clouds 2/4.png")); // Closest layer
+            layers[0] = ImageIO.read(new File("assets/Clouds/Clouds 5/1.png")); // Farthest layer
+            layers[1] = ImageIO.read(new File("assets/Clouds/Clouds 5/3.png"));
+            layers[2] = ImageIO.read(new File("assets/Clouds/Clouds 5/4.png"));
+            layers[3] = ImageIO.read(new File("assets/Clouds/Clouds 5/5.png")); // Closest layer
         } catch (IOException e) {
             e.printStackTrace();
         }

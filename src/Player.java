@@ -14,10 +14,22 @@ public class Player {
     // HP and damage system
     private int maxHP = 100;
     private int currentHP = 100;
-    private int attackDamage = 20;
+    private int attackDamage = 50;
     private boolean invulnerable = false;
     private int invulnerabilityTimer = 0;
     private final int INVULNERABILITY_DURATION = 30; // frames of invulnerability after being hit
+    
+    // Hit animation state
+    private boolean isHit = false;
+    private int hitAnimationTimer = 0;
+    private final int HIT_ANIMATION_DURATION = 20; // frames to show hit animation
+    
+    // Mana system
+    private int maxMana = 100;
+    private int currentMana = 100;
+    private final int ATTACK_MANA_COST = 50; // 50% of mana for attack
+    private final int MANA_REGEN_RATE = 2; // Normal regeneration rate
+    private final int CHARGING_MANA_REGEN_RATE = 1; // Regeneration rate while charging
 
     private BufferedImage spriteSheet;
     private int frameCount;
@@ -32,6 +44,12 @@ public class Player {
     private boolean isAttacking = false; // Track if the player is attacking
     private boolean isBasicAttacking = false; // Track if player is doing basic attack
     private int basicAttackCount = 0;
+    
+    // Store previous sprite info to return to after hit animation
+    private String previousSpriteFile = "assets/Blue_witch/B_witch_idle.png";
+    private int previousWidth = 21;
+    private int previousHeight = 39;
+    private int previousFrameCount = 6;
 
     public Player(int x, int y, int width, int height, String spriteFile, int frameCount) {
         int scaledWidth = width * 3;
@@ -39,13 +57,18 @@ public class Player {
         bounds = new Rectangle(x, y, scaledWidth, scaledHeight);
         hurtbox = new Rectangle(0, 0, 0, 0); // Initialize empty hurtbox
         this.frameCount = frameCount;
+        
+        // Store initial sprite info
+        previousSpriteFile = spriteFile;
+        previousWidth = width;
+        previousHeight = height;
+        previousFrameCount = frameCount;
 
         try {
             spriteSheet = ImageIO.read(new File(spriteFile));
             frameHeight = spriteSheet.getHeight() / frameCount;
             frameWidth = spriteSheet.getWidth();
         } catch (IOException e) {
-            System.out.println("hi");
             e.printStackTrace();
         }
     }
@@ -62,6 +85,8 @@ public class Player {
 
             if (isAttacking) {
                 attackCount++;
+                // Lock player in place during attack
+                speedX = 0;
             }
             if (attackCount >= 9) {
                 stopAttack();
@@ -70,18 +95,36 @@ public class Player {
 
             if (isBasicAttacking) {
                 basicAttackCount++;
+                // Lock player in place during basic attack
+                speedX = 0;
             }
             if (basicAttackCount >= 6) { // Assuming basic attack has 6 frames
                 stopBasicAttack();
                 basicAttackCount = 0;
             }
+            
+            // Handle hit animation timing
+            if (isHit) {
+                hitAnimationTimer++;
+                // Lock player in place during hit animation
+                speedX = 0;
+
+                if (hitAnimationTimer >= HIT_ANIMATION_DURATION) {
+                    stopHitAnimation();
+                }
+            }
 
             animationCounter = 0;
         }
 
-        // If charging or attacking, prevent movement
+        // If charging, attacking, or hit, prevent movement
         if (isCharging || isAttacking || isBasicAttacking) {
             speedX = 0;
+        }
+        
+        // Regenerate mana only when charging
+        if (isCharging) {
+            regenerateMana(CHARGING_MANA_REGEN_RATE);
         }
 
         // Update hurtbox position based on player position and direction
@@ -144,13 +187,17 @@ public class Player {
     }
 
     public void moveLeft() {
-        speedX = -5;
-        facingLeft = true; // Set direction to left
+        if (!isAttacking && !isBasicAttacking) { // Only allow movement if not attacking or hit
+            speedX = -5;
+            facingLeft = true; // Set direction to left
+        }
     }
 
     public void moveRight() {
-        speedX = 5;
-        facingLeft = false; // Set direction to right
+        if (!isAttacking && !isBasicAttacking) { // Only allow movement if not attacking or hit
+            speedX = 5;
+            facingLeft = false; // Set direction to right
+        }
     }
 
     public void jump() {
@@ -178,8 +225,11 @@ public class Player {
     }
 
     public void attack() {
-        if (!isAttacking && !isBasicAttacking) {
+        // Only allow attack if player has enough mana and isn't in hit state
+        if (!isAttacking && !isBasicAttacking && currentMana >= ATTACK_MANA_COST) {
             isAttacking = true;
+            // Consume mana for attack
+            useMana(ATTACK_MANA_COST);
             changeSprite(104, 45, "assets/Blue_witch/B_witch_attack.png", 9); // Attack sprite
             currentFrame = 0; // Reset animation to first frame
             animationCounter = 0; // Reset animation counter to avoid immediate frame progression
@@ -208,31 +258,85 @@ public class Player {
             changeSprite(21, 39, "assets/Blue_witch/B_witch_idle.png", 6); // Return to idle sprite
         }
     }
+    
+    // Start hit animation
+    private void startHitAnimation() {
+        if (!isHit) {
+            // Save current sprite info before changing to hit animation if not already in hit sprite
+            if (!isAttacking && !isBasicAttacking) {
+                previousSpriteFile = "assets/Blue_witch/B_witch_idle.png";
+                previousWidth = 21;
+                previousHeight = 39;
+                previousFrameCount = 6;
+            }
+            
+            isHit = true;
+            hitAnimationTimer = 0;
+            
+            // Change to hit animation sprite
+            changeSprite(32, 48, "assets/Blue_witch/B_witch_take_damage.png", 3);
+            currentFrame = 0; // Start from first frame
+        }
+    }
+    
+    // Stop hit animation and restore previous sprite
+    private void stopHitAnimation() {
+        if (isHit) {
+            isHit = false;
+            hitAnimationTimer = 0;
+            
+            // Return to previous state if it was an attack
+            if (isAttacking) {
+                changeSprite(104, 45, "assets/Blue_witch/B_witch_attack.png", 9);
+            } else if (isBasicAttacking) {
+                changeSprite(50, 45, "assets/Blue_witch/B_witch_basic.png", 5);
+            } else {
+                // Otherwise go back to idle
+                changeSprite(previousWidth, previousHeight, previousSpriteFile, previousFrameCount);
+            }
+        }
+    }
 
     public void changeSprite(int width, int height, String spriteFile, int frameCount) {
-        this.frameCount = frameCount;
-
         try {
-            spriteSheet = ImageIO.read(new File(spriteFile));
+            // Store previous state in case loading fails
+            BufferedImage oldSheet = spriteSheet;
+            int oldFrameCount = this.frameCount;
+            int oldFrameHeight = frameHeight;
+            int oldFrameWidth = frameWidth;
+            
+            // Try to load new sprite
+            BufferedImage newSheet = ImageIO.read(new File(spriteFile));
+            
+            // If successfully loaded, update sprite properties
+            spriteSheet = newSheet;
+            this.frameCount = frameCount;
             frameHeight = spriteSheet.getHeight() / frameCount;
             frameWidth = spriteSheet.getWidth();
+            
+            // Reset animation to avoid out-of-bounds frames
+            currentFrame = 0;
+            animationCounter = 0;
         } catch (IOException e) {
+            // Log error but don't crash
             System.out.println("Error loading sprite: " + spriteFile);
-            // Don't change frameHeight or frameWidth if loading fails
-            // This keeps the current sprite
+            // Keep using the current sprite - don't change anything
+        } catch (Exception e) {
+            // Other potential errors (null pointer, array index, etc.)
+            System.out.println("Error changing sprite: " + e.getMessage());
         }
-
-        // The hitbox (bounds) remains unchanged, so no adjustments to `bounds` are made here.
     }
 
     public void draw(Graphics g, boolean showBounds) {
         if (spriteSheet != null) {
-            // If invulnerable, flash the sprite (appear every other frame)
-            if (invulnerable && invulnerabilityTimer % 4 < 2) {
-                // Skip drawing the sprite to create flashing effect
-            } else {
-                try {
-                    BufferedImage currentSprite = spriteSheet.getSubimage(0, currentFrame * frameHeight, frameWidth, frameHeight);
+            try {
+                // Make sure currentFrame doesn't exceed our frameCount
+                int safeFrame = Math.min(currentFrame, frameCount - 1);
+                
+                // Add bounds checking for subimage extraction
+                int y = safeFrame * frameHeight;
+                if (y + frameHeight <= spriteSheet.getHeight() && frameWidth <= spriteSheet.getWidth()) {
+                    BufferedImage currentSprite = spriteSheet.getSubimage(0, y, frameWidth, frameHeight);
 
                     // Scale the sprite by 3x
                     int scaledWidth = frameWidth * 3;
@@ -267,10 +371,10 @@ public class Player {
                     } else {
                         g.drawImage(currentSprite, spriteX, spriteY, scaledWidth, scaledHeight, null);
                     }
-                } catch (Exception e) {
-                    // Handle sprite rendering errors gracefully
-                    System.out.println("Error rendering sprite: " + e.getMessage());
                 }
+            } catch (Exception e) {
+                // Handle sprite rendering exceptions silently
+                // System.out.println("Error rendering sprite: " + e.getMessage());
             }
         }
 
@@ -286,8 +390,9 @@ public class Player {
             }
         }
         
-        // Draw health bar
+        // Draw health and mana bars
         drawHealthBar(g);
+        drawManaBar(g);
     }
     
     // Method to draw the health bar above the player
@@ -311,11 +416,71 @@ public class Player {
         g.drawRect(barX, barY, barWidth, barHeight);
     }
     
-    // Method to take damage
+    // Method to draw the mana bar below the health bar
+    private void drawManaBar(Graphics g) {
+        int barWidth = bounds.width;
+        int barHeight = 5;
+        int barX = bounds.x;
+        int barY = bounds.y - 4; // Position just below health bar
+        
+        // Background (empty mana)
+        g.setColor(Color.GRAY);
+        g.fillRect(barX, barY, barWidth, barHeight);
+        
+        // Foreground (current mana)
+        g.setColor(Color.BLUE);
+        int currentWidth = (int)(((double)currentMana / maxMana) * barWidth);
+        g.fillRect(barX, barY, currentWidth, barHeight);
+        
+        // Border
+        g.setColor(Color.BLACK);
+        g.drawRect(barX, barY, barWidth, barHeight);
+    }
+    
+    // Method to use mana
+    public boolean useMana(int amount) {
+        if (currentMana >= amount) {
+            currentMana -= amount;
+            return true;
+        }
+        return false;
+    }
+    
+    // Method to regenerate mana
+    public void regenerateMana(int amount) {
+        currentMana += amount;
+        if (currentMana > maxMana) {
+            currentMana = maxMana;
+        }
+    }
+    
+    // Method to get current mana
+    public int getCurrentMana() {
+        return currentMana;
+    }
+    
+    // Method to get max mana
+    public int getMaxMana() {
+        return maxMana;
+    }
+    
+    // Method to check if player has enough mana for an attack
+    public boolean hasEnoughManaForAttack() {
+        return currentMana >= ATTACK_MANA_COST;
+    }
+    
+    // Method to take damage - now triggers hit animation
     public void takeDamage(int damage) {
         if (!invulnerable) {
             currentHP -= damage;
-            if (currentHP < 0) currentHP = 0;
+            if (currentHP < 0) {
+                currentHP = 0;
+            }
+            
+            // Start hit animation
+            startHitAnimation();
+            
+            // Make player briefly invulnerable after taking damage
             invulnerable = true;
             invulnerabilityTimer = 0;
         }
@@ -324,7 +489,9 @@ public class Player {
     // Method to heal
     public void heal(int amount) {
         currentHP += amount;
-        if (currentHP > maxHP) currentHP = maxHP;
+        if (currentHP > maxHP) {
+            currentHP = maxHP;
+        }
     }
     
     // Check if player is dead
@@ -341,6 +508,11 @@ public class Player {
     public int getCurrentHP() {
         return currentHP;
     }
+
+    // Set current HP
+    public void setCurrentHP(int currentHP) {
+        this.currentHP = currentHP;
+    }
     
     // Get max HP
     public int getMaxHP() {
@@ -354,12 +526,17 @@ public class Player {
 
     // Add this getter method to check if player is attacking
     public boolean isAttacking() {
-        return isAttacking || isBasicAttacking; // Either type of attack counts
+        return isAttacking;
     }
 
     // Add getter for basic attack state
     public boolean isBasicAttacking() {
         return isBasicAttacking;
+    }
+    
+    // Add getter for hit state
+    public boolean isHit() {
+        return isHit;
     }
 
     public Rectangle getHurtbox() {
