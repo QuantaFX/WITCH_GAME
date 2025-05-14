@@ -490,7 +490,6 @@ public class Player {
     public boolean useMana(int amount) {
         if (currentMana >= amount) {
             currentMana -= amount;
-            return true;
         }
         return false;
     }
