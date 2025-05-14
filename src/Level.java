@@ -8,6 +8,7 @@ public class Level {
     private Point playerStartPosition;
     private int levelNumber;
     private boolean hasBoss;
+    private String backgroundPath;
     
     public Level(int levelNumber) {
         this.levelNumber = levelNumber;
@@ -15,6 +16,7 @@ public class Level {
         this.enemies = new ArrayList<>();
         this.playerStartPosition = new Point(100, 300); // Default position
         this.hasBoss = false;
+        this.backgroundPath = "../assets/Level_bg/Level1.png"; // Default background
     }
     
     public void addPlatform(Platform platform) {
@@ -35,6 +37,10 @@ public class Level {
     
     public void setHasBoss(boolean hasBoss) {
         this.hasBoss = hasBoss;
+    }
+    
+    public void setBackgroundPath(String path) {
+        this.backgroundPath = path;
     }
     
     public ArrayList<Platform> getPlatforms() {
@@ -63,5 +69,9 @@ public class Level {
     
     public boolean hasDoor() {
         return door != null;
+    }
+    
+    public String getBackgroundPath() {
+        return backgroundPath;
     }
 } 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<level>
+<level bg="../assets/Level_bg/Level1.png">
   <platforms>
-    <platform height="106" width="874" x="-35" y="472"/>
+    <platform height="138" width="870" x="-69" y="470"/>
   </platforms>
   <enemies>
     <enemy x="417" y="324"/>

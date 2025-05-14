@@ -92,7 +92,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         
         loadCurrentLevel();
 
-        background = new Background();
+
 
         // Initialize background music
         // Note: Using WAV format as it's natively supported by Java Sound API
@@ -136,6 +136,16 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         System.out.println("GamePanel - Setting player position to: " + startPos.x + ", " + startPos.y);
         player.setPosition(startPos.x, startPos.y);
         System.out.println("GamePanel - Player position after setting: " + player.getBounds().x + ", " + player.getBounds().y);
+        
+        // Load background
+        String bgPath = level.getBackgroundPath();
+        if (bgPath != null && !bgPath.isEmpty()) {
+            if (background == null) {
+                background = new Background(bgPath);
+            } else {
+                background.setLevelBackground(bgPath);
+            }
+        }
         
         levelCompleted = false;
         levelCompletedTimer = 0;

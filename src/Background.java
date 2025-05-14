@@ -8,11 +8,15 @@ public class Background {
     private BufferedImage[] layers;
     private double[] scrollSpeeds; // Use double for smoother scrolling
     private double[] offsets; // Track the horizontal scroll offsets as double
+    private String levelBackgroundPath;
 
-    public Background() {
+
+    
+    public Background(String levelBgPath) {
         layers = new BufferedImage[5];
         scrollSpeeds = new double[]{0.05, 0.1, 0.2, 0.4, 0}; // Slower speeds for each layer
         offsets = new double[5];
+        this.levelBackgroundPath = levelBgPath;
 
         try {
             layers[0] = ImageIO.read(new File("assets/Clouds/Clouds 5/1.png")); // Farthest layer
@@ -20,10 +24,45 @@ public class Background {
             layers[2] = ImageIO.read(new File("assets/Clouds/Clouds 5/4.png"));
             layers[3] = ImageIO.read(new File("assets/Clouds/Clouds 5/5.png")); // Closest layer
             // LAST LAYER IS THE LEVEL BACKGROUND WITH 0 SCROLL SPEED
-            layers[4] = ImageIO.read(new File("assets/Level_bg/Level1.png")); // Closest layer
+            loadLevelBackground(levelBgPath);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    private void loadLevelBackground(String path) {
+        try {
+            File bgFile = new File(path);
+            if (!bgFile.exists()) {
+                // If the file doesn't exist with the provided path, try without "../" prefix
+                if (path.startsWith("../")) {
+                    String altPath = path.substring(3); // Remove "../" prefix
+                    bgFile = new File(altPath);
+                    if (bgFile.exists()) {
+                        layers[4] = ImageIO.read(bgFile);
+                        return;
+                    }
+                } else {
+                    // Try with "../" prefix
+                    bgFile = new File("../" + path);
+                    if (bgFile.exists()) {
+                        layers[4] = ImageIO.read(bgFile);
+                        return;
+                    }
+                }
+                System.err.println("Could not find background image at: " + path);
+            } else {
+                layers[4] = ImageIO.read(bgFile);
+            }
+        } catch (IOException e) {
+            System.err.println("Error loading level background: " + path);
+            e.printStackTrace();
+        }
+    }
+    
+    public void setLevelBackground(String path) {
+        this.levelBackgroundPath = path;
+        loadLevelBackground(path);
     }
 
     public void update() {

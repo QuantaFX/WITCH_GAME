@@ -64,6 +64,14 @@ public class LevelManager {
             
             Level level = new Level(levelNumber);
             
+            // Parse level background if exists
+            Element rootElement = doc.getDocumentElement();
+            if (rootElement.hasAttribute("bg")) {
+                String bgPath = rootElement.getAttribute("bg");
+                level.setBackgroundPath(bgPath);
+                System.out.println("Level " + levelNumber + " - Background path: " + bgPath);
+            }
+            
             // Parse platforms
             NodeList platformNodes = doc.getElementsByTagName("platform");
             for (int i = 0; i < platformNodes.getLength(); i++) {

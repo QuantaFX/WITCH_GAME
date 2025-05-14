@@ -10,6 +10,7 @@ import javax.xml.transform.dom.*;
 import javax.xml.transform.stream.*;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
+import javax.imageio.ImageIO;
 
 public class LevelBuilder extends JFrame {
     private DrawingPanel drawingPanel;
@@ -23,10 +24,13 @@ public class LevelBuilder extends JFrame {
     // Track the currently loaded level file
     private File currentLevelFile = null;
     
+    // Background image
+    private String backgroundPath = "../assets/Level_bg/Level1.png";
+    private JLabel backgroundPreview;
+    private Image backgroundImage;
+    
     public LevelBuilder() {
         setTitle("Level Builder");
-        setSize(800, 600);
-        setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
         
@@ -42,6 +46,34 @@ public class LevelBuilder extends JFrame {
         
         typePanel.add(typeLabel);
         typePanel.add(elementTypeComboBox);
+        
+        // Background selection
+        JPanel bgPanel = new JPanel();
+        JLabel bgLabel = new JLabel("Background:");
+        JButton bgSelectButton = new JButton("Select Background");
+        backgroundPreview = new JLabel();
+        backgroundPreview.setPreferredSize(new Dimension(60, 40));
+        
+        // Load default background
+        try {
+            backgroundImage = ImageIO.read(new File(backgroundPath));
+            Image scaledImage = backgroundImage.getScaledInstance(60, 40, Image.SCALE_SMOOTH);
+            backgroundPreview.setIcon(new ImageIcon(scaledImage));
+            drawingPanel.setBackgroundImage(backgroundImage);
+        } catch (IOException e) {
+            backgroundPreview.setText("No Image");
+            e.printStackTrace();
+        }
+        
+        bgSelectButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                selectBackground();
+            }
+        });
+        
+        bgPanel.add(bgLabel);
+        bgPanel.add(bgSelectButton);
+        bgPanel.add(backgroundPreview);
         
         // Buttons panel
         JPanel buttonPanel = new JPanel();
@@ -87,13 +119,88 @@ public class LevelBuilder extends JFrame {
         buttonPanel.add(saveButton);
         buttonPanel.add(loadButton);
         
-        controlPanel.add(typePanel, BorderLayout.NORTH);
+        JPanel topControlPanel = new JPanel(new BorderLayout());
+        topControlPanel.add(typePanel, BorderLayout.NORTH);
+        topControlPanel.add(bgPanel, BorderLayout.SOUTH);
+        
+        controlPanel.add(topControlPanel, BorderLayout.NORTH);
         controlPanel.add(buttonPanel, BorderLayout.SOUTH);
         
         add(drawingPanel, BorderLayout.CENTER);
         add(controlPanel, BorderLayout.SOUTH);
       
+        // Pack the frame to fit the components
+        pack();
+        
+        // Center on screen
+        setLocationRelativeTo(null);
         setVisible(true);
+    }
+    
+    private void selectBackground() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setCurrentDirectory(new File("../assets/Level_bg"));
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
+            public boolean accept(File f) {
+                return f.isDirectory() || 
+                       f.getName().toLowerCase().endsWith(".png") || 
+                       f.getName().toLowerCase().endsWith(".jpg") ||
+                       f.getName().toLowerCase().endsWith(".jpeg");
+            }
+            
+            public String getDescription() {
+                return "Image Files (*.png, *.jpg, *.jpeg)";
+            }
+        });
+        
+        int result = fileChooser.showOpenDialog(this);
+        
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            
+            // Convert to relative path
+            String absolutePath = selectedFile.getAbsolutePath();
+            String relativePath = getRelativePath(absolutePath);
+            
+            backgroundPath = relativePath;
+            
+            try {
+                backgroundImage = ImageIO.read(selectedFile);
+                Image scaledImage = backgroundImage.getScaledInstance(60, 40, Image.SCALE_SMOOTH);
+                backgroundPreview.setIcon(new ImageIcon(scaledImage));
+                drawingPanel.setBackgroundImage(backgroundImage);
+                drawingPanel.repaint();
+            } catch (IOException e) {
+                backgroundPreview.setText("Error");
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    private String getRelativePath(String absolutePath) {
+        // Get the current working directory
+        String currentDir = System.getProperty("user.dir");
+        
+        // If the absolute path contains the current directory, make it relative
+        if (absolutePath.startsWith(currentDir)) {
+            String relativePath = absolutePath.substring(currentDir.length());
+            // Remove leading slash if present
+            if (relativePath.startsWith("/") || relativePath.startsWith("\\")) {
+                relativePath = relativePath.substring(1);
+            }
+            // Always use forward slashes for compatibility
+            relativePath = relativePath.replace('\\', '/');
+            
+            // Add "../" prefix since we're in the src folder
+            if (!relativePath.startsWith("../")) {
+                relativePath = "../" + relativePath;
+            }
+            
+            return relativePath;
+        }
+        
+        // If not in current directory, keep the path as is but normalize slashes
+        return absolutePath.replace('\\', '/');
     }
     
     private void saveToFile() {
@@ -117,6 +224,9 @@ public class LevelBuilder extends JFrame {
             Document doc = docBuilder.newDocument();
             Element rootElement = doc.createElement("level");
             doc.appendChild(rootElement);
+            
+            // Add background attribute
+            rootElement.setAttribute("bg", backgroundPath);
             
             // Add platforms
             Element platformsElement = doc.createElement("platforms");
@@ -239,6 +349,30 @@ public class LevelBuilder extends JFrame {
                 ArrayList<GameElement> loadedElements = new ArrayList<>();
                 GameElement playerElement = null;
                 GameElement doorElement = null;
+                
+                // Load background if exists
+                Element rootElement = doc.getDocumentElement();
+                if (rootElement.hasAttribute("bg")) {
+                    backgroundPath = rootElement.getAttribute("bg");
+                    try {
+                        File bgFile = new File(backgroundPath);
+                        if (!bgFile.exists() && !backgroundPath.startsWith("../")) {
+                            // Try with "../" prefix
+                            bgFile = new File("../" + backgroundPath);
+                            if (bgFile.exists()) {
+                                backgroundPath = "../" + backgroundPath;
+                            }
+                        }
+                        
+                        backgroundImage = ImageIO.read(bgFile);
+                        Image scaledImage = backgroundImage.getScaledInstance(60, 40, Image.SCALE_SMOOTH);
+                        backgroundPreview.setIcon(new ImageIcon(scaledImage));
+                        drawingPanel.setBackgroundImage(backgroundImage);
+                    } catch (IOException e) {
+                        System.err.println("Error loading background image: " + backgroundPath);
+                        e.printStackTrace();
+                    }
+                }
                 
                 // Load platforms from new format
                 NodeList platformNodes = doc.getElementsByTagName("platform");
@@ -391,11 +525,17 @@ class DrawingPanel extends JPanel {
     private boolean resizing = false;
     private String currentElementType = "Platform";
     
+    // Background image
+    private Image backgroundImage;
+    
     public DrawingPanel() {
         setBackground(Color.WHITE);
         MyMouseListener mouseListener = new MyMouseListener();
         addMouseListener(mouseListener);
         addMouseMotionListener(mouseListener);
+        
+        // Set preferred size to match game dimensions
+        setPreferredSize(new Dimension(800, 600));
     }
     
     public ArrayList<GameElement> getElements() {
@@ -422,9 +562,18 @@ class DrawingPanel extends JPanel {
         repaint();
     }
     
+    public void setBackgroundImage(Image image) {
+        this.backgroundImage = image;
+    }
+    
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        
+        // Draw background
+        if (backgroundImage != null) {
+            g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+        }
         
         // Draw platforms
         for (GameElement element : elements) {
