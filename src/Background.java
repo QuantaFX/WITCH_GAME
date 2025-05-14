@@ -10,15 +10,17 @@ public class Background {
     private double[] offsets; // Track the horizontal scroll offsets as double
 
     public Background() {
-        layers = new BufferedImage[4];
-        scrollSpeeds = new double[]{0.05, 0.1, 0.2, 0.4}; // Slower speeds for each layer
-        offsets = new double[4];
+        layers = new BufferedImage[5];
+        scrollSpeeds = new double[]{0.05, 0.1, 0.2, 0.4, 0}; // Slower speeds for each layer
+        offsets = new double[5];
 
         try {
             layers[0] = ImageIO.read(new File("assets/Clouds/Clouds 5/1.png")); // Farthest layer
             layers[1] = ImageIO.read(new File("assets/Clouds/Clouds 5/3.png"));
             layers[2] = ImageIO.read(new File("assets/Clouds/Clouds 5/4.png"));
             layers[3] = ImageIO.read(new File("assets/Clouds/Clouds 5/5.png")); // Closest layer
+            // LAST LAYER IS THE LEVEL BACKGROUND WITH 0 SCROLL SPEED
+            layers[4] = ImageIO.read(new File("assets/Level_bg/Level1.png")); // Closest layer
         } catch (IOException e) {
             e.printStackTrace();
         }
