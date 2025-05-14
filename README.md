@@ -3,7 +3,7 @@
 
 # Sorcera
 
-**Sorcera** is a Java-based game project developed by QuantaFX.
+**Sorcera** is a Java-based game project by QuantaFX, vonuyvicoo, and nathan32bit.
 
 ## Features
 
