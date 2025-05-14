@@ -23,6 +23,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     // Track if player is currently in an attack state
     private boolean playerWasAttacking = false;
+    private boolean playerWasBasicAttacking = false;
 
     public GamePanel() {
         setPreferredSize(new Dimension(800, 600));
@@ -110,15 +111,17 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         
         background.update(); // Update the background for parallax scrolling
         
-        // Detect when player starts a new attack
+        // Detect when player starts a new attack (either regular or basic)
         boolean playerIsAttacking = player.isAttacking();
-        if (playerIsAttacking && !playerWasAttacking) {
+        boolean playerIsBasicAttacking = player.isBasicAttacking();
+        if ((playerIsAttacking && !playerWasAttacking) || (playerIsBasicAttacking && !playerWasBasicAttacking)) {
             // Player just started attacking, reset hit tracking for all enemies
             for (Enemy enemy : enemies) {
                 enemy.resetHitTracking();
             }
         }
         playerWasAttacking = playerIsAttacking;
+        playerWasBasicAttacking = playerIsBasicAttacking;
         
         player.update();
         
@@ -134,8 +137,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             Enemy enemy = enemyIterator.next();
             enemy.update();
             
-            // If player is attacking, check if attack hits enemy
-            if (player.isAttacking() && player.getHurtbox().intersects(enemy.getBounds())) {
+            // If player is attacking or doing basic attack, check if attack hits enemy
+            if ((player.isAttacking() || player.isBasicAttacking()) && player.getHurtbox().intersects(enemy.getBounds())) {
                 // Only damage enemy if it hasn't been hit by this attack yet
                 if (!enemy.wasHitByCurrentAttack()) {
                     enemy.takeDamage(player.getAttackDamage());
@@ -220,8 +223,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             return;
         }
 
-        // If player is attacking, in hit animation, or performing basic attack, ignore movement inputs
-        if (player.isAttacking() || player.isBasicAttacking() || player.isHit()) {
+        // If player is attacking or performing basic attack, ignore movement inputs
+        // But allow movement during hit state (after the hit animation ends)
+        if (player.isAttacking() || player.isBasicAttacking()) {
             return;
         }
 
@@ -244,6 +248,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             }
         } else if (key == KeyEvent.VK_K) {
             player.basicAttack(); // Start basic attack using idle sprite
+            
+            // Reset hit tracking for all enemies when K is pressed
+            for (Enemy enemy : enemies) {
+                enemy.resetHitTracking();
+            }
         } else if (key == KeyEvent.VK_M) {
             // Toggle music on/off
             toggleMusic();
@@ -254,8 +263,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     public void keyReleased(KeyEvent e) {
         int key = e.getKeyCode();
         
-        // Don't process movement key releases during attack animations or hit state
-        if (player.isAttacking() || player.isBasicAttacking() || player.isHit()) {
+        // Don't process movement key releases during attack animations
+        if (player.isAttacking() || player.isBasicAttacking()) {
             return;
         }
         

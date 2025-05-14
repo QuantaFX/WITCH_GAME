@@ -15,6 +15,7 @@ public class Player {
     private int maxHP = 100;
     private int currentHP = 100;
     private int attackDamage = 50;
+    private int basicAttackDamage = 25; // Damage for basic attacks (K key)
     private boolean invulnerable = false;
     private int invulnerabilityTimer = 0;
     private final int INVULNERABILITY_DURATION = 30; // frames of invulnerability after being hit
@@ -98,7 +99,7 @@ public class Player {
                 // Lock player in place during basic attack
                 speedX = 0;
             }
-            if (basicAttackCount >= 6) { // Assuming basic attack has 6 frames
+            if (basicAttackCount >= 3) { // Reduced from 6 to 3 frames for faster basic attacks
                 stopBasicAttack();
                 basicAttackCount = 0;
             }
@@ -106,8 +107,11 @@ public class Player {
             // Handle hit animation timing
             if (isHit) {
                 hitAnimationTimer++;
-                // Lock player in place during hit animation
-                speedX = 0;
+                
+                // Only lock movement during the first few frames of hit animation
+                if (hitAnimationTimer < 10) {
+                    speedX = 0;
+                }
 
                 if (hitAnimationTimer >= HIT_ANIMATION_DURATION) {
                     stopHitAnimation();
@@ -117,7 +121,7 @@ public class Player {
             animationCounter = 0;
         }
 
-        // If charging, attacking, or hit, prevent movement
+        // If charging, attacking, or basic attacking, prevent movement
         if (isCharging || isAttacking || isBasicAttacking) {
             speedX = 0;
         }
@@ -125,6 +129,11 @@ public class Player {
         // Regenerate mana only when charging
         if (isCharging) {
             regenerateMana(CHARGING_MANA_REGEN_RATE);
+        } else {
+            // Regenerate mana slowly even when not charging
+            if (animationCounter == 0) {
+                regenerateMana(1); // Slower regeneration rate
+            }
         }
 
         // Update hurtbox position based on player position and direction
@@ -150,7 +159,8 @@ public class Player {
                 hurtboxWidth = bounds.width * 4;
                 hurtboxHeight = bounds.height;
             } else {
-                hurtboxWidth = bounds.width / 2;
+                // Make basic attack hurtbox larger
+                hurtboxWidth = bounds.width;
                 hurtboxHeight = bounds.height;
             }
 
@@ -187,21 +197,21 @@ public class Player {
     }
 
     public void moveLeft() {
-        if (!isAttacking && !isBasicAttacking) { // Only allow movement if not attacking or hit
+        if (!isAttacking && !isBasicAttacking) { // Only check if not attacking or doing basic attack
             speedX = -5;
             facingLeft = true; // Set direction to left
         }
     }
 
     public void moveRight() {
-        if (!isAttacking && !isBasicAttacking) { // Only allow movement if not attacking or hit
+        if (!isAttacking && !isBasicAttacking) { // Only check if not attacking or doing basic attack
             speedX = 5;
             facingLeft = false; // Set direction to right
         }
     }
 
     public void jump() {
-        if (speedY == 0) {
+        if (speedY == 0 && !isAttacking && !isBasicAttacking) {
             speedY = JUMP_STRENGTH;
         }
     }
@@ -237,8 +247,10 @@ public class Player {
     }
 
     public void basicAttack() {
-        if (!isBasicAttacking && !isAttacking) {
+        if (!isAttacking) { // Allow basic attack if not doing main attack
+            // Always restart the basic attack animation when K is pressed
             isBasicAttacking = true;
+            basicAttackCount = 0;
             changeSprite(50, 45, "assets/Blue_witch/B_witch_basic.png", 5); // Basic attack using idle sprite
             currentFrame = 0; // Reset animation to first frame
             animationCounter = 0; // Reset animation counter
@@ -294,6 +306,8 @@ public class Player {
                 // Otherwise go back to idle
                 changeSprite(previousWidth, previousHeight, previousSpriteFile, previousFrameCount);
             }
+            
+            // Player can move again after hit animation ends, even while still invulnerable
         }
     }
 
@@ -499,9 +513,14 @@ public class Player {
         return currentHP <= 0;
     }
     
-    // Get attack damage
+    // Get attack damage based on attack type
     public int getAttackDamage() {
-        return attackDamage;
+        if (isAttacking) {
+            return attackDamage;
+        } else if (isBasicAttacking) {
+            return basicAttackDamage;
+        }
+        return 0; // No damage if not attacking
     }
     
     // Get current HP
