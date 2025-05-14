@@ -7,6 +7,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.Iterator;
+import java.util.Random;
 
 public class GamePanel extends JPanel implements Runnable, KeyListener {
     private Thread gameThread;
@@ -15,15 +16,20 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private Player player;
     private ArrayList<Enemy> enemies;
     private ArrayList<Platform> platforms;
+    private ArrayList<Heart> hearts; // Added hearts collection
     private Background background;
     private boolean isWindows;
     private AudioPlayer backgroundMusic; // Added audio player for background music
     private boolean musicEnabled = true; // Flag to track if music is enabled
     private boolean gameOver = false; // Flag to track if game is over
+    private Random random = new Random(); // For random heart drops
 
     // Track if player is currently in an attack state
     private boolean playerWasAttacking = false;
     private boolean playerWasBasicAttacking = false;
+
+    // Heart drop chance (50%)
+    private final double HEART_DROP_CHANCE = 1;
 
     public GamePanel() {
         setPreferredSize(new Dimension(800, 600));
@@ -64,6 +70,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         Enemy enemy3 = new Enemy(300, 200, 36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
         enemy3.setTarget(player);
         enemies.add(enemy3);
+
+        // Initialize hearts ArrayList
+        hearts = new ArrayList<>();
 
         platforms = new ArrayList<>();
         platforms.add(new Platform(-35, 472, 874, 106));
@@ -145,10 +154,30 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     
                     // Remove dead enemies
                     if (enemy.isDead()) {
+                        // Chance to drop a heart (50%)
+                        if (random.nextDouble() < HEART_DROP_CHANCE) {
+                            // Create a heart at the enemy's position
+                            Heart heart = new Heart(enemy.getBounds().x + enemy.getBounds().width/2, 
+                                                   enemy.getBounds().y + enemy.getBounds().height/2);
+                            hearts.add(heart);
+                        }
                         enemyIterator.remove();
                         continue;
                     }
                 }
+            }
+        }
+        
+        // Update hearts and check for player collection
+        Iterator<Heart> heartIterator = hearts.iterator();
+        while (heartIterator.hasNext()) {
+            Heart heart = heartIterator.next();
+            heart.update();
+            
+            // Check if player collects the heart
+            if (player.getBounds().intersects(heart.getBounds())) {
+                player.heal(heart.getHealAmount());
+                heartIterator.remove();
             }
         }
         
@@ -169,6 +198,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         background.draw(g);
         for (Platform platform : platforms) {
             platform.draw(g);
+        }
+
+        // Draw all hearts
+        for (Heart heart : hearts) {
+            heart.draw(g);
         }
 
         // Draw all enemies
@@ -198,19 +232,18 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         g.drawString(message, x, y);
         
         g.setFont(new Font("Arial", Font.PLAIN, 20));
+        String restartMessage = "Press R to restart";
         metrics = g.getFontMetrics();
-        message = "Press R to restart";
-        x = (getWidth() - metrics.stringWidth(message)) / 2;
+        x = (getWidth() - metrics.stringWidth(restartMessage)) / 2;
         y = getHeight() / 2 + 50;
-        g.drawString(message, x, y);
+        g.drawString(restartMessage, x, y);
     }
     
-    // Reset the game
     private void resetGame() {
-        gameOver = false;
         initGame();
+        gameOver = false;
     }
-
+    
     @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
@@ -223,9 +256,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             return;
         }
 
-        // If player is attacking or performing basic attack, ignore movement inputs
-        // But allow movement during hit state (after the hit animation ends)
-        if (player.isAttacking() || player.isBasicAttacking()) {
+        // If player is attacking (but not basic attacking), ignore movement inputs
+        // But allow movement during hit state (after the hit animation ends) and basic attacks
+        if (player.isAttacking()) {
             return;
         }
 
@@ -263,14 +296,16 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     public void keyReleased(KeyEvent e) {
         int key = e.getKeyCode();
         
-        // Don't process movement key releases during attack animations
-        if (player.isAttacking() || player.isBasicAttacking()) {
+        // Don't process movement key releases during attack animations (but allow during basic attacks)
+        if (player.isAttacking()) {
             return;
         }
         
         if (key == KeyEvent.VK_A || key == KeyEvent.VK_D) {
-            // Return to normal sprite
-            player.changeSprite(21, 39, "assets/Blue_witch/B_witch_idle.png", 6); // Idle sprite
+            // Return to normal sprite if not basic attacking
+            if (!player.isBasicAttacking()) {
+                player.changeSprite(21, 39, "assets/Blue_witch/B_witch_idle.png", 6); // Idle sprite
+            }
             player.stop();
         } else if (key == KeyEvent.VK_L) {
             player.stopCharging(); // Stop charging mana

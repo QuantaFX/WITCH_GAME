@@ -1,5 +1,6 @@
 ./src/Enemy.java
 ./src/AudioPlayer.java
+./src/Heart.java
 ./src/Platform.java
 ./src/Player.java
 ./src/Main.java

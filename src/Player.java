@@ -15,7 +15,7 @@ public class Player {
     private int maxHP = 100;
     private int currentHP = 100;
     private int attackDamage = 50;
-    private int basicAttackDamage = 25; // Damage for basic attacks (K key)
+    private int basicAttackDamage = 10; // Damage for basic attacks (K key)
     private boolean invulnerable = false;
     private int invulnerabilityTimer = 0;
     private final int INVULNERABILITY_DURATION = 30; // frames of invulnerability after being hit
@@ -96,8 +96,6 @@ public class Player {
 
             if (isBasicAttacking) {
                 basicAttackCount++;
-                // Lock player in place during basic attack
-                speedX = 0;
             }
             if (basicAttackCount >= 3) { // Reduced from 6 to 3 frames for faster basic attacks
                 stopBasicAttack();
@@ -121,8 +119,8 @@ public class Player {
             animationCounter = 0;
         }
 
-        // If charging, attacking, or basic attacking, prevent movement
-        if (isCharging || isAttacking || isBasicAttacking) {
+        // If charging or attacking (but not basic attacking), prevent movement
+        if (isCharging || isAttacking) {
             speedX = 0;
         }
         
@@ -197,21 +195,22 @@ public class Player {
     }
 
     public void moveLeft() {
-        if (!isAttacking && !isBasicAttacking) { // Only check if not attacking or doing basic attack
-            speedX = -5;
-            facingLeft = true; // Set direction to left
+        if (!isAttacking) { // Only check if not attacking, allow during basic attack
+            speedX = -4;
+            facingLeft = true;
         }
     }
 
     public void moveRight() {
-        if (!isAttacking && !isBasicAttacking) { // Only check if not attacking or doing basic attack
-            speedX = 5;
-            facingLeft = false; // Set direction to right
+        if (!isAttacking) { // Only check if not attacking, allow during basic attack
+            speedX = 4;
+            facingLeft = false;
         }
     }
 
     public void jump() {
-        if (speedY == 0 && !isAttacking && !isBasicAttacking) {
+        // Only allow jumping if on a platform
+        if (speedY == 0 && !isAttacking) { // Only check if not attacking, allow during basic attack
             speedY = JUMP_STRENGTH;
         }
     }
@@ -247,8 +246,8 @@ public class Player {
     }
 
     public void basicAttack() {
-        if (!isAttacking) { // Allow basic attack if not doing main attack
-            // Always restart the basic attack animation when K is pressed
+        if (!isAttacking && !isBasicAttacking) { // Only allow basic attack if not already attacking
+            // Start basic attack
             isBasicAttacking = true;
             basicAttackCount = 0;
             changeSprite(50, 45, "assets/Blue_witch/B_witch_basic.png", 5); // Basic attack using idle sprite
