@@ -36,10 +36,20 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     // Heart drop chance (50%)
     private final double HEART_DROP_CHANCE = 1;
+    
+    // Starting level index (0-based)
+    private int startLevel = 0;
 
     public GamePanel() {
+        this(0); // Default to first level (index 0)
+    }
+    
+    public GamePanel(int startLevel) {
         setPreferredSize(new Dimension(800, 600));
         setBackground(Color.BLACK);
+        
+        // Store the starting level
+        this.startLevel = startLevel;
 
         // Check the OS
         isWindows = System.getProperty("os.name").toLowerCase().contains("win");
@@ -67,8 +77,19 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         platforms = new ArrayList<>();
         hearts = new ArrayList<>();
         
-        // Initialize level manager and load first level
+        // Initialize level manager and load specified level
         levelManager = new LevelManager(player);
+        
+        // Set the current level to the specified starting level
+        if (startLevel > 0) {
+            boolean success = levelManager.loadLevel(startLevel);
+            if (!success) {
+                System.out.println("Failed to load level " + (startLevel + 1) + ". Using level 1 instead.");
+            } else {
+                System.out.println("Starting at level " + (startLevel + 1));
+            }
+        }
+        
         loadCurrentLevel();
 
         background = new Background();
@@ -346,6 +367,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
+        boolean isShiftDown = (e.getModifiersEx() & KeyEvent.SHIFT_DOWN_MASK) != 0;
         
         // Handle game over state
         if (gameOver) {
@@ -373,7 +395,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             player.changeSprite(21, 41, "assets/Blue_witch/B_witch_run.png", 8);
             player.moveRight();
         } else if (key == KeyEvent.VK_SPACE || key == KeyEvent.VK_W) {
-            player.jump();
+            if (isShiftDown) {
+                player.highJump(); // High jump with Shift+Space or Shift+W
+            } else {
+                player.jump(); // Normal jump
+            }
         } else if (key == KeyEvent.VK_F3) {
             showBounds = !showBounds;
         } else if (key == KeyEvent.VK_L) {

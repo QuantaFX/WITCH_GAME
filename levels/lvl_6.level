@@ -2,9 +2,9 @@
 <level>
   <platforms>
     <platform height="20" width="312" x="-217" y="107"/>
-    <platform height="20" width="157" x="643" y="354"/>
-    <platform height="20" width="409" x="289" y="230"/>
-    <platform height="20" width="464" x="497" y="488"/>
+    <platform height="20" width="157" x="643" y="338"/>
+    <platform height="20" width="409" x="289" y="176"/>
+    <platform height="20" width="464" x="496" y="502"/>
     <platform height="20" width="77" x="174" y="142"/>
   </platforms>
   <enemies>
@@ -13,5 +13,5 @@
     <enemy x="553" y="321"/>
   </enemies>
   <player x="30" y="-28"/>
-  <door height="94" width="40" x="770" y="395"/>
+  <door height="94" width="40" x="770" y="416"/>
 </level>

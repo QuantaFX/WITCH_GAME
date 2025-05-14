@@ -3,6 +3,7 @@
 ./src/AudioPlayer.java
 ./src/Heart.java
 ./src/Platform.java
+./src/LevelBuilder.java
 ./src/LevelManager.java
 ./src/Player.java
 ./src/Main.java

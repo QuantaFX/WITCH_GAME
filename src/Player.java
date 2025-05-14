@@ -10,6 +10,7 @@ public class Player {
     private int speedX = 0, speedY = 0;
     private final int GRAVITY = 1;
     private final int JUMP_STRENGTH = -15;
+    private final int HIGH_JUMP_STRENGTH = -23; // 1.5x stronger jump for Shift+W/Space
     
     // HP and damage system
     private int maxHP = 100;
@@ -248,6 +249,13 @@ public class Player {
         // Only allow jumping if on a platform
         if (speedY == 0 && !isAttacking) { // Only check if not attacking, allow during basic attack
             speedY = JUMP_STRENGTH;
+        }
+    }
+
+    public void highJump() {
+        // Only allow jumping if on a platform
+        if (speedY == 0 && !isAttacking) { // Only check if not attacking, allow during basic attack
+            speedY = HIGH_JUMP_STRENGTH;
         }
     }
 
