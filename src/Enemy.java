@@ -82,6 +82,9 @@ public class Enemy extends Player {
         
         // Mark this enemy as hit by the current attack
         hitByCurrentAttack = true;
+        
+        // Play enemy hurt sound
+        playEnemyHurtSound();
     }
     
     // Method to reset hit tracking when player starts a new attack
@@ -314,6 +317,16 @@ public class Enemy extends Player {
     
     public boolean isFrozen() {
         return frozen;
+    }
+    
+    // Play sound when enemy is hurt
+    private void playEnemyHurtSound() {
+        try {
+            AudioPlayer hurtSound = new AudioPlayer("assets/sounds/orc_hurt.wav");
+            hurtSound.play(false);
+        } catch (Exception e) {
+            System.out.println("Could not play enemy hurt sound: " + e.getMessage());
+        }
     }
 }
 

@@ -21,6 +21,9 @@ public class Player {
     private int invulnerabilityTimer = 0;
     private final int INVULNERABILITY_DURATION = 30; // frames of invulnerability after being hit
     
+    // UI elements
+    private BufferedImage portraitImage;
+    
     // Hit animation state
     private boolean isHit = false;
     private int hitAnimationTimer = 0;
@@ -70,6 +73,9 @@ public class Player {
             spriteSheet = ImageIO.read(new File(spriteFile));
             frameHeight = spriteSheet.getHeight() / frameCount;
             frameWidth = spriteSheet.getWidth();
+            
+            // Load portrait image for UI
+            portraitImage = ImageIO.read(new File("assets/Blue_witch/B_witch.gif"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -286,6 +292,9 @@ public class Player {
             changeSprite(104, 45, "assets/Blue_witch/B_witch_attack.png", 9); // Attack sprite
             currentFrame = 0; // Reset animation to first frame
             animationCounter = 0; // Reset animation counter to avoid immediate frame progression
+            
+            // Play super attack sound
+            playSuperAttackSound();
         }
     }
 
@@ -297,6 +306,9 @@ public class Player {
             changeSprite(50, 45, "assets/Blue_witch/B_witch_basic.png", 5); // Basic attack using idle sprite
             currentFrame = 0; // Reset animation to first frame
             animationCounter = 0; // Reset animation counter
+            
+            // Play basic attack sound
+            playBasicAttackSound();
         }
     }
 
@@ -454,10 +466,15 @@ public class Player {
     
     // Method to draw the health bar above the player
     private void drawHealthBar(Graphics g) {
-        int barWidth = bounds.width;
-        int barHeight = 5;
-        int barX = bounds.x;
-        int barY = bounds.y - 14;
+        int barWidth = 150;
+        int barHeight = 15;
+        int barX = 70; // Position at top left of screen, leaving space for portrait
+        int barY = 30; // Position moved down by 10 pixels
+        
+        // Draw "Health" text
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 12));
+        g.drawString("Health", barX, barY - 5);
         
         // Background (empty health)
         g.setColor(Color.RED);
@@ -471,14 +488,28 @@ public class Player {
         // Border
         g.setColor(Color.BLACK);
         g.drawRect(barX, barY, barWidth, barHeight);
+        
+        // Draw player portrait
+        if (portraitImage != null) {
+            g.drawImage(portraitImage, 10, 20, 50, 50, null); // Moved down by 10 pixels
+        } else {
+            // If image couldn't be loaded, draw a simple circle as placeholder
+            g.setColor(Color.BLUE);
+            g.fillOval(10, 20, 50, 50); // Moved down by 10 pixels
+        }
     }
     
     // Method to draw the mana bar below the health bar
     private void drawManaBar(Graphics g) {
-        int barWidth = bounds.width;
-        int barHeight = 5;
-        int barX = bounds.x;
-        int barY = bounds.y - 8; // Position just below health bar
+        int barWidth = 150;
+        int barHeight = 15;
+        int barX = 70; // Same X as health bar
+        int barY = 60; // Position moved down by 10 pixels
+        
+        // Draw "Mana" text
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 12));
+        g.drawString("Mana", barX, barY - 5);
         
         // Background (empty mana)
         g.setColor(Color.GRAY);
@@ -539,6 +570,9 @@ public class Player {
             // Make player briefly invulnerable after taking damage
             invulnerable = true;
             invulnerabilityTimer = 0;
+            
+            // Play hurt sound
+            playHurtSound();
         }
     }
     
@@ -644,5 +678,35 @@ public class Player {
     public void setPosition(int x, int y) {
         bounds.x = x;
         bounds.y = y;
+    }
+
+    // Play sound for basic attack
+    private void playBasicAttackSound() {
+        try {
+            AudioPlayer attackSound = new AudioPlayer("assets/sounds/basic_attack.wav");
+            attackSound.play(false);
+        } catch (Exception e) {
+            System.out.println("Could not play basic attack sound: " + e.getMessage());
+        }
+    }
+    
+    // Play sound for super attack
+    private void playSuperAttackSound() {
+        try {
+            AudioPlayer attackSound = new AudioPlayer("assets/sounds/super_attack.wav");
+            attackSound.play(false);
+        } catch (Exception e) {
+            System.out.println("Could not play super attack sound: " + e.getMessage());
+        }
+    }
+    
+    // Play sound when player is hurt
+    private void playHurtSound() {
+        try {
+            AudioPlayer hurtSound = new AudioPlayer("assets/sounds/player_hurt.wav");
+            hurtSound.play(false);
+        } catch (Exception e) {
+            System.out.println("Could not play player hurt sound: " + e.getMessage());
+        }
     }
 }
