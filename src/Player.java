@@ -54,9 +54,9 @@ public class Player {
     private int previousFrameCount = 6;
 
     public Player(int x, int y, int width, int height, String spriteFile, int frameCount) {
-        int scaledWidth = width * 3;
-        int scaledHeight = height * 3;
-        bounds = new Rectangle(x, y, scaledWidth, scaledHeight);
+        int scaledWidth = width * 2;
+        int scaledHeight = height * 2;
+        bounds = new Rectangle(x, y, scaledWidth, scaledHeight + 20);
         hurtbox = new Rectangle(0, 0, 0, 0); // Initialize empty hurtbox
         this.frameCount = frameCount;
         
@@ -408,9 +408,9 @@ public class Player {
                             spriteX = bounds.x + bounds.width - scaledWidth;
                         } else {
                             // When attacking and facing right, use the default left alignment
-                            spriteX = bounds.x;
+                            spriteX = bounds.x - 25;
                         }
-                        spriteY = bounds.y;
+                        spriteY = bounds.y - 20;
                     } else {
                         // Center other sprites
                         spriteX = bounds.x + (bounds.width - scaledWidth) / 2;
@@ -457,7 +457,7 @@ public class Player {
         int barWidth = bounds.width;
         int barHeight = 5;
         int barX = bounds.x;
-        int barY = bounds.y - 10;
+        int barY = bounds.y - 12;
         
         // Background (empty health)
         g.setColor(Color.RED);
@@ -478,7 +478,7 @@ public class Player {
         int barWidth = bounds.width;
         int barHeight = 5;
         int barX = bounds.x;
-        int barY = bounds.y - 4; // Position just below health bar
+        int barY = bounds.y - 6; // Position just below health bar
         
         // Background (empty mana)
         g.setColor(Color.GRAY);

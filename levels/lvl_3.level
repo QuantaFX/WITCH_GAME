@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <level bg="../assets/Level_bg/Level3.png">
   <platforms>
-    <platform height="23" width="672" x="-448" y="489"/>
-    <platform height="20" width="373" x="584" y="259"/>
-    <platform height="23" width="250" x="267" y="347"/>
+    <platform height="23" width="672" x="-443" y="494"/>
+    <platform height="20" width="373" x="601" y="267"/>
+    <platform height="20" width="226" x="292" y="354"/>
   </platforms>
   <enemies>
-    <enemy x="380" y="229"/>
-    <enemy x="644" y="144"/>
+    <enemy x="440" y="230"/>
+    <enemy x="716" y="154"/>
   </enemies>
   <player x="43" y="311"/>
-  <door height="113" width="40" x="761" y="148"/>
+  <door height="113" width="40" x="770" y="155"/>
 </level>

@@ -19,10 +19,10 @@ public class Background {
         this.levelBackgroundPath = levelBgPath;
 
         try {
-            layers[0] = ImageIO.read(new File("assets/Clouds/Clouds 5/1.png")); // Farthest layer
-            layers[1] = ImageIO.read(new File("assets/Clouds/Clouds 5/3.png"));
-            layers[2] = ImageIO.read(new File("assets/Clouds/Clouds 5/4.png"));
-            layers[3] = ImageIO.read(new File("assets/Clouds/Clouds 5/5.png")); // Closest layer
+            layers[0] = ImageIO.read(new File("assets/Clouds/Clouds 7/1.png")); // Farthest layer
+            layers[1] = ImageIO.read(new File("assets/Clouds/Clouds 7/2.png"));
+            layers[2] = ImageIO.read(new File("assets/Clouds/Clouds 7/3.png"));
+            layers[3] = ImageIO.read(new File("assets/Clouds/Clouds 7/4.png")); // Closest layer
             // LAST LAYER IS THE LEVEL BACKGROUND WITH 0 SCROLL SPEED
             loadLevelBackground(levelBgPath);
         } catch (IOException e) {
