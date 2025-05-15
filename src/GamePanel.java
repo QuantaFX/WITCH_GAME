@@ -38,7 +38,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private boolean playerWasBasicAttacking = false;
 
     // Heart drop chance (50%)
-    private final double HEART_DROP_CHANCE = 1;
+    private final double HEART_DROP_CHANCE = 0.5;
     
     // Starting level index (0-based)
     private int startLevel = 0;

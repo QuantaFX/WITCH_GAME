@@ -180,30 +180,62 @@ public class Enemy extends Player {
         if (yDifference <= Y_LEVEL_TOLERANCE) {
             // Player is at same level, follow them
             if (targetBounds.x < myBounds.x) {
-                changeSprite(47, 28, "assets/Orc_Sprite/orc_walk.png", 8);
-                currentSpriteFile = "assets/Orc_Sprite/orc_walk.png";
-                currentWidth = 47;
-                currentFrameCount = 8;
+                if(!isBoss){
+                    changeSprite(47, 28, "assets/Orc_Sprite/orc_walk.png", 8);
+                    currentSpriteFile = "assets/Orc_Sprite/orc_walk.png";
+                    currentWidth = 47;
+                    currentFrameCount = 8;
+                }
+                else {
+                    changeSprite(47, 28, "assets/Boss_Sprite/boss_walk.png", 8);
+                    currentSpriteFile = "assets/Boss_Sprite/boss_walk.png";
+                    currentWidth = 47;
+                    currentFrameCount = 8;
+                }
                 moveLeft();
             } else if (targetBounds.x > myBounds.x) {
-                changeSprite(47, 28, "assets/Orc_Sprite/orc_walk.png", 8);
-                currentSpriteFile = "assets/Orc_Sprite/orc_walk.png";
-                currentWidth = 47;
-                currentFrameCount = 8;
+                if(!isBoss){
+                    changeSprite(47, 28, "assets/Orc_Sprite/orc_walk.png", 8);
+                    currentSpriteFile = "assets/Orc_Sprite/orc_walk.png";
+                    currentWidth = 47;
+                    currentFrameCount = 8;
+                }
+                else {
+                    changeSprite(47, 28, "assets/Boss_Sprite/boss_walk.png", 8);
+                    currentSpriteFile = "assets/Boss_Sprite/boss_walk.png";
+                    currentWidth = 47;
+                    currentFrameCount = 8;
+                }
                 moveRight();
             } else {
-                changeSprite(36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
-                currentSpriteFile = "assets/Orc_Sprite/orc_idle.png";
-                currentWidth = 36;
-                currentFrameCount = 4;
+                if(!isBoss){
+                    changeSprite(36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
+                    currentSpriteFile = "assets/Orc_Sprite/orc_idle.png";
+                    currentWidth = 36;
+                    currentFrameCount = 4;
+                }
+                else {
+                    changeSprite(36, 28, "assets/Boss_Sprite/boss_idle.png", 4);
+                    currentSpriteFile = "assets/Boss_Sprite/boss_idle.png";
+                    currentWidth = 36;
+                    currentFrameCount = 4;
+                }
                 stop();
             }
         } else {
             // Player is not at same level, stop following
-            changeSprite(36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
-            currentSpriteFile = "assets/Orc_Sprite/orc_idle.png";
-            currentWidth = 36;
-            currentFrameCount = 4;
+            if(!isBoss){
+                changeSprite(36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
+                currentSpriteFile = "assets/Orc_Sprite/orc_idle.png";
+                currentWidth = 36;
+                currentFrameCount = 4;
+            }
+            else {
+                changeSprite(36, 28, "assets/Boss_Sprite/boss_idle.png", 4);
+                currentSpriteFile = "assets/Boss_Sprite/boss_idle.png";
+                currentWidth = 36;
+                currentFrameCount = 4;
+            }
             stop();
         }
     }
@@ -219,10 +251,18 @@ public class Enemy extends Player {
         if (isCollidingWithPlayer() && !target.isInvulnerable()) {
             try {
                 // Show attack animation
-                changeSprite(64, 28, "assets/Orc_Sprite/orc_hit.png", 6);
-                currentSpriteFile = "assets/Orc_Sprite/orc_hit.png";
-                currentWidth = 64;
-                currentFrameCount = 6;
+                if(!isBoss){
+                    changeSprite(64, 28, "assets/Orc_Sprite/orc_hit.png", 6);
+                    currentSpriteFile = "assets/Orc_Sprite/orc_hit.png";
+                    currentWidth = 64;
+                    currentFrameCount = 6;
+                }
+                else {
+                    changeSprite(64, 28, "assets/Boss_Sprite/boss_bit.png", 6);
+                    currentSpriteFile = "assets/BossSprite/boss_bit.png";
+                    currentWidth = 64;
+                    currentFrameCount = 6;
+                }
             } catch (Exception e) {
                 // If attack sprite fails to load, fall back to idle sprite
                 changeSprite(36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
