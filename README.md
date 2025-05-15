@@ -1,13 +1,19 @@
 
----
-
 # Sorcera
+
+
+[![Stars](https://img.shields.io/github/stars/QuantaFX/WITCH_GAME.svg)](https://github.com/QuantaFX/WITCH_GAME/stargazers)
+[![Forks](https://img.shields.io/github/forks/QuantaFX/WITCH_GAME.svg)](https://github.com/QuantaFX/WITCH_GAME/network/members)
+[![Issues](https://img.shields.io/github/issues/QuantaFX/WITCH_GAME.svg)](https://github.com/QuantaFX/WITCH_GAME/issues)
 
 **Sorcera** is a Java-based game project by QuantaFX, vonuyvicoo, and nathan32bit.
 
 ## Features
 
 * Developed in **Java**.
+* Optimized cutscene engine player
+* Internal Level Builder
+* Optimized sprite player
 * Organized project structure with directories for assets, levels, and source code.
 
 ## Project Structure
@@ -19,11 +25,9 @@ Sorcera/
 ├── levels/            # Level design files
 ├── src/               # Java source code
 ├── .gitignore         # Git ignore rules
-├── Sorcera.iml     # IntelliJ project file
+├── Sorcera.iml        # IntelliJ project file
 └── sources.txt        # List of external sources or references
 ```
-
-
 
 ## Getting Started
 
@@ -35,15 +39,11 @@ To run or contribute to **Sorcera**, follow these steps:
    git clone https://github.com/QuantaFX/WITCH_GAME.git
    ```
 
+2. **Run the project:**
 
-
-2. **Open the project:**
-
-   Use an IDE like [IntelliJ IDEA](https://www.jetbrains.com/idea/) to open the project.
-
-3. **Build and run:**
-
-   Compile and run the project using your IDE's build tools or via the command line.
+   ```bash
+   javac src/*.java && java -cp src Main
+   ```
 
 ## Contributing
 
@@ -61,5 +61,3 @@ This project is licensed under the [MIT License](LICENSE).
 ---
 
 For more details, visit the [Sorcera GitHub repository](https://github.com/QuantaFX/WITCH_GAME).
-
----
