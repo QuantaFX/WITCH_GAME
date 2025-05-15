@@ -12,6 +12,8 @@ import javax.swing.ImageIcon;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.imageio.ImageIO;
+import java.awt.Desktop;
+import java.io.IOException;
 
 public class GamePanel extends JPanel implements Runnable, KeyListener {
     // Game state enum to handle different states
@@ -21,7 +23,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         CONTROLS,   // Viewing controls screen
         PAUSED,     // Game paused
         GAME_OVER,  // Game over state
-        COMPLETED   // Game completed state
+        COMPLETED,  // Game completed state
+        CUTSCENE    // Cutscene state
     }
     
     private GameState currentState = GameState.MENU;
@@ -84,6 +87,20 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private int creditsScrollPosition;
     private boolean creditsInitialized = false;
     private final int CREDITS_SCROLL_SPEED = 1;
+
+    // Cutscene-related variables
+    private String currentCutscene;
+    private boolean cutsceneFinished = false;
+    private JPanel videoPanel; // Panel to display video content
+    private Timer cutsceneTimer;
+    private File[] cutsceneFrameFiles; // Store file references instead of loaded images
+    private int currentCutsceneFrame = 0;
+    private int totalCutsceneFrames = 0;
+    private final int CUTSCENE_FRAME_DELAY = 200; // ms between frames
+    private long cutsceneStartTime;
+    private Image currentFrameImage; // Only store the current frame in memory
+    private AudioPlayer cutsceneAudio; // Audio for cutscene
+    private boolean cutsceneAudioStarted = false; // Track if audio has started
 
     public GamePanel() {
         this(0); // Default to first level (index 0)
@@ -321,6 +338,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             case PAUSED:
                 // No updates needed when paused
                 break;
+                
+            case CUTSCENE:
+                // No updates needed for cutscene
+                break;
         }
     }
     
@@ -517,6 +538,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             case PAUSED:
                 drawGamePlay(g);
                 drawPauseScreen(g);
+                break;
+                
+            case CUTSCENE:
+                drawCutscene(g);
                 break;
         }
     }
@@ -963,6 +988,26 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             backgroundMusic = null; // Set to null so loadCurrentLevel will start music again
         }
         
+        // Stop cutscene audio if still playing
+        if (cutsceneAudio != null) {
+            cutsceneAudio.stop();
+            cutsceneAudio = null;
+        }
+        
+        // Clean up cutscene resources
+        if (cutsceneTimer != null && cutsceneTimer.isRunning()) {
+            cutsceneTimer.stop();
+            cutsceneTimer = null;
+        }
+        cutsceneFrameFiles = null;
+        currentFrameImage = null;
+        currentCutsceneFrame = 0;
+        totalCutsceneFrames = 0;
+        cutsceneAudioStarted = false;
+        
+        // Suggest garbage collection to free memory
+        System.gc();
+        
         initGame();
         gameOver = false;
         gameCompleted = false;
@@ -971,6 +1016,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         menuSelection = 0;
         pauseMenuSelection = 0;
         creditsInitialized = false;
+        cutsceneFinished = false;
     }
     
     @Override
@@ -1022,6 +1068,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     currentState = GameState.MENU;
                 }
                 break;
+                
+            case CUTSCENE:
+                // Handle cutscene key presses
+                handleCutsceneKeyPress(key);
+                break;
         }
     }
     
@@ -1033,8 +1084,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         } else if (key == KeyEvent.VK_ENTER) {
             switch (menuSelection) {
                 case 0: // Start Game
-                    resetGame();
-                    currentState = GameState.PLAYING;
+                    // Play intro cutscene before starting the game
+                    playCutscene("assets/Cutscenes/Start.mp4");
                     break;
                 case 1: // Controls
                     currentState = GameState.CONTROLS;
@@ -1174,5 +1225,236 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     break;
             }
         }
+    }
+
+    private void drawCutscene(Graphics g) {
+        // Black background during cutscene
+        g.setColor(Color.BLACK);
+        g.fillRect(0, 0, getWidth(), getHeight());
+        
+        // If we have a current frame, draw it
+        if (currentFrameImage != null) {
+            // Start audio when first frame is visible (only once)
+            if (!cutsceneAudioStarted && cutsceneAudio != null) {
+                cutsceneAudio.play(true); // Loop the audio
+                cutsceneAudioStarted = true;
+                System.out.println("Starting cutscene audio with first frame");
+            }
+            
+            // Calculate position to center the frame
+            int frameWidth = currentFrameImage.getWidth(null);
+            int frameHeight = currentFrameImage.getHeight(null);
+            
+            // Scale the frame if it's too large for the screen
+            if (frameWidth > getWidth() || frameHeight > getHeight()) {
+                double scaleX = (double) getWidth() / frameWidth;
+                double scaleY = (double) getHeight() / frameHeight;
+                double scale = Math.min(scaleX, scaleY) * 0.9; // Scale to 90% of available space
+                
+                frameWidth = (int) (frameWidth * scale);
+                frameHeight = (int) (frameHeight * scale);
+            }
+            
+            int x = (getWidth() - frameWidth) / 2;
+            int y = (getHeight() - frameHeight) / 2;
+            
+            // Draw the frame scaled
+            g.drawImage(currentFrameImage, x, y, frameWidth, frameHeight, null);
+        } else if (cutsceneFrameFiles == null || totalCutsceneFrames == 0) {
+            // No frames available - show instructions
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.BOLD, 16));
+            String[] instructions = {
+                "No video frames found!",
+                "",
+                "To prepare video frames:",
+                "1. Extract frames from your MP4 using FFmpeg:",
+                "   ffmpeg -i assets/Cutscenes/Start.mp4 -vf fps=24 assets/Cutscenes/Start_frames/frame_%04d.png",
+                "",
+                "2. Make sure the frames are in the Start_frames directory"
+            };
+            
+            int y = getHeight() / 2 - (instructions.length * 25) / 2;
+            for (String line : instructions) {
+                FontMetrics metrics = g.getFontMetrics();
+                int x = (getWidth() - metrics.stringWidth(line)) / 2;
+                g.drawString(line, x, y);
+                y += 25;
+            }
+        }
+        
+        // Draw a message to show cutscene is playing and frame count
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.PLAIN, 16));
+        String message = "Cutscene playing... Press ESC to skip";
+        String frameInfo = "Frame: " + (currentCutsceneFrame + 1) + " / " + totalCutsceneFrames;
+        
+        FontMetrics metrics = g.getFontMetrics();
+        int x = (getWidth() - metrics.stringWidth(message)) / 2;
+        int y = getHeight() - 30;
+        g.drawString(message, x, y);
+        
+        // Only show frame info if in debug mode or F3 is pressed
+        if (showBounds) {
+            x = 10;
+            y = 30;
+            g.drawString(frameInfo, x, y);
+        }
+        
+        // Check if cutscene should be ended
+        if (cutsceneFinished) {
+            endCutscene();
+        }
+    }
+
+    private void handleCutsceneKeyPress(int key) {
+        if (key == KeyEvent.VK_ESCAPE || key == KeyEvent.VK_ENTER || key == KeyEvent.VK_SPACE) {
+            endCutscene();
+        }
+    }
+    
+    // Play a cutscene 
+    private void playCutscene(String resourcePath) {
+        currentCutscene = resourcePath;
+        cutsceneFinished = false;
+        cutsceneAudioStarted = false;
+        currentState = GameState.CUTSCENE;
+        cutsceneStartTime = System.currentTimeMillis();
+        
+        // Stop any playing music
+        if (backgroundMusic != null) {
+            backgroundMusic.stop();
+        }
+        
+        // Initialize cutscene audio but don't play it yet
+        try {
+            cutsceneAudio = new AudioPlayer("assets/music/cutscene_audio.wav");
+            // Audio will be played when first frame is visible
+        } catch (Exception e) {
+            System.out.println("Error loading cutscene audio: " + e.getMessage());
+        }
+        
+        // For MP4 files, we need to use the frames extracted from the video
+        if (resourcePath.toLowerCase().endsWith(".mp4")) {
+            // Look for a directory with the same name as the video but without the extension
+            String framesDirPath = resourcePath.substring(0, resourcePath.lastIndexOf('.')) + "_frames";
+            loadCutsceneFrames(framesDirPath);
+            
+            if (cutsceneFrameFiles == null || cutsceneFrameFiles.length == 0) {
+                System.out.println("No video frames found for: " + resourcePath);
+                System.out.println("Please extract frames from the video to: " + framesDirPath);
+                endCutscene();
+            } else {
+                startCutsceneAnimation();
+            }
+        } else {
+            // Load image-based cutscene frames directly from directory
+            loadCutsceneFrames(resourcePath);
+            startCutsceneAnimation();
+        }
+    }
+    
+    private void loadCutsceneFrames(String basePath) {
+        try {
+            // Check if basePath is a directory
+            File dir = new File(basePath);
+            if (dir.exists() && dir.isDirectory()) {
+                // Get all image files from the directory but don't load them yet
+                File[] imageFiles = dir.listFiles((d, name) -> 
+                    name.toLowerCase().endsWith(".png") || 
+                    name.toLowerCase().endsWith(".jpg") ||
+                    name.toLowerCase().endsWith(".jpeg"));
+                
+                if (imageFiles != null && imageFiles.length > 0) {
+                    // Sort files by name for proper sequence
+                    java.util.Arrays.sort(imageFiles, (a, b) -> a.getName().compareTo(b.getName()));
+                    
+                    System.out.println("Found " + imageFiles.length + " cutscene frames in: " + basePath);
+                    
+                    // Store only the file references, not the loaded images
+                    cutsceneFrameFiles = imageFiles;
+                    totalCutsceneFrames = imageFiles.length;
+                    currentCutsceneFrame = 0;
+                    
+                    // Load just the first frame
+                    if (totalCutsceneFrames > 0) {
+                        currentFrameImage = new ImageIcon(cutsceneFrameFiles[0].getPath()).getImage();
+                    }
+                } else {
+                    System.out.println("No image files found in cutscene directory: " + basePath);
+                    cutsceneFrameFiles = null;
+                    totalCutsceneFrames = 0;
+                }
+            } else {
+                System.out.println("Cutscene path not found or not a directory: " + basePath);
+                cutsceneFrameFiles = null;
+                totalCutsceneFrames = 0;
+            }
+        } catch (Exception e) {
+            System.out.println("Error loading cutscene frames: " + e.getMessage());
+            e.printStackTrace();
+            cutsceneFrameFiles = null;
+            totalCutsceneFrames = 0;
+        }
+    }
+    
+    private void startCutsceneAnimation() {
+        if (cutsceneFrameFiles != null && totalCutsceneFrames > 0) {
+            // For smoother animation, use a proper frame rate
+            // 60fps = ~16.7ms between frames
+            int frameRate = 60;  
+            int frameDelay = 1000 / frameRate;
+            
+            System.out.println("Starting cutscene animation with " + totalCutsceneFrames + 
+                              " frames at " + frameRate + " fps");
+            
+            // Start timer to advance frames
+            cutsceneTimer = new Timer(frameDelay, e -> {
+                // Load the next frame on demand
+                currentCutsceneFrame++;
+                if (currentCutsceneFrame < totalCutsceneFrames) {
+                    // Load the current frame and release the previous one
+                    try {
+                        currentFrameImage = new ImageIcon(cutsceneFrameFiles[currentCutsceneFrame].getPath()).getImage();
+                    } catch (Exception ex) {
+                        System.out.println("Error loading frame " + currentCutsceneFrame + ": " + ex.getMessage());
+                    }
+                } else {
+                    // End cutscene when all frames have been shown
+                    cutsceneFinished = true;
+                    currentFrameImage = null; // Release the last frame
+                }
+                repaint(); // Request repaint after each frame change for smooth animation
+            });
+            cutsceneTimer.start();
+        } else {
+            endCutscene();
+        }
+    }
+    
+    private void endCutscene() {
+        // Stop animation timer if running
+        if (cutsceneTimer != null && cutsceneTimer.isRunning()) {
+            cutsceneTimer.stop();
+            cutsceneTimer = null;
+        }
+        
+        // Stop cutscene audio
+        if (cutsceneAudio != null) {
+            cutsceneAudio.stop();
+            cutsceneAudio = null;
+        }
+        
+        // Clear cutscene resources
+        cutsceneFrameFiles = null;
+        currentFrameImage = null;
+        totalCutsceneFrames = 0;
+        
+        // Suggest garbage collection
+        System.gc();
+        
+        // Start game after cutscene
+        resetGame();
+        currentState = GameState.PLAYING;
     }
 }
