@@ -7,11 +7,22 @@ import java.io.File;
 import java.util.ArrayList;
 import java.awt.Point;
 
+/**
+ * Manages the loading, storage, and transitioning between game levels.
+ * Handles level data loading from XML files and provides methods to access and change levels.
+ */
 public class LevelManager {
     private ArrayList<Level> levels;
     private int currentLevelIndex;
     private Player player;
     
+    /**
+     * Constructor for the LevelManager class.
+     * Initializes the level list, loads all levels, and sets up the player at the starting position.
+     * 
+     * @param player Player The player character to position at each level
+     * @return void
+     */
     public LevelManager(Player player) {
         this.levels = new ArrayList<>();
         this.currentLevelIndex = 0;
@@ -28,6 +39,12 @@ public class LevelManager {
         }
     }
     
+    /**
+     * Loads all level files into memory.
+     * Sets up each door to point to the next level in sequence.
+     * 
+     * @return void
+     */
     private void loadAllLevels() {
         // Load levels from level 1 to 10
         for (int i = 1; i <= 10; i++) {
@@ -46,6 +63,13 @@ public class LevelManager {
         }
     }
     
+    /**
+     * Loads a single level from an XML file.
+     * Parses all level elements including platforms, enemies, player start position, and door.
+     * 
+     * @param filePath String Path to the level XML file
+     * @return Level A fully initialized Level object, or null if loading failed
+     */
     private Level loadLevelFromFile(String filePath) {
         try {
             File file = new File(filePath);
@@ -152,6 +176,11 @@ public class LevelManager {
         }
     }
     
+    /**
+     * Returns the currently active level.
+     * 
+     * @return Level The current level, or null if no valid level exists
+     */
     public Level getCurrentLevel() {
         if (currentLevelIndex < 0 || currentLevelIndex >= levels.size()) {
             return null;
@@ -159,6 +188,12 @@ public class LevelManager {
         return levels.get(currentLevelIndex);
     }
     
+    /**
+     * Loads a specific level by index and positions the player at the level's start position.
+     * 
+     * @param levelIndex int The index of the level to load
+     * @return boolean True if the level was loaded successfully, false otherwise
+     */
     public boolean loadLevel(int levelIndex) {
         if (levelIndex < 0 || levelIndex >= levels.size()) {
             return false;
@@ -175,14 +210,29 @@ public class LevelManager {
         return true;
     }
     
+    /**
+     * Moves to the next level in sequence.
+     * 
+     * @return boolean True if the next level was loaded successfully, false if there are no more levels
+     */
     public boolean moveToNextLevel() {
         return loadLevel(currentLevelIndex + 1);
     }
     
+    /**
+     * Returns the list of all levels.
+     * 
+     * @return ArrayList<Level> The complete list of game levels
+     */
     public ArrayList<Level> getLevels() {
         return levels;
     }
     
+    /**
+     * Returns the index of the current level.
+     * 
+     * @return int The current level index
+     */
     public int getCurrentLevelIndex() {
         return currentLevelIndex;
     }

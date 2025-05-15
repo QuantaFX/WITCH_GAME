@@ -761,6 +761,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
     
+    /**
+     * Draws the pause screen overlay with menu buttons.
+     *
+     * @param g The Graphics object to draw on
+     * @return void
+     */
     private void drawPauseScreen(Graphics g) {
         g.setColor(new Color(0, 0, 0, 150));
         g.fillRect(0, 0, getWidth(), getHeight());
@@ -811,6 +817,13 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
     
+    /**
+     * Draws level information on the screen, including the current level number
+     * and a message if the door is inactive and there are enemies remaining.
+     *
+     * @param g The Graphics object to draw on
+     * @return void
+     */
     private void drawLevelInfo(Graphics g) {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 14));
@@ -833,6 +846,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
     
+    /**
+     * Draws the level transition overlay with a fading effect.
+     *
+     * @param g The Graphics object to draw on
+     * @return void
+     */
     private void drawLevelTransition(Graphics g) {
         float alpha = Math.min(1.0f, (float)levelCompletedTimer / LEVEL_TRANSITION_TIME);
         g.setColor(new Color(0, 0, 0, alpha));
@@ -849,7 +868,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
     
-    // Draw game over screen
+    /**
+     * Draws the game over screen with a message and restart instructions.
+     *
+     * @param g The Graphics object to draw on
+     * @return void
+     */
     private void drawGameOver(Graphics g) {
         g.setColor(new Color(0, 0, 0, 200)); // Semi-transparent black
         g.fillRect(0, 0, getWidth(), getHeight());
@@ -882,7 +906,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         g.drawString(restartMessage, x, y);
     }
     
-    // Draw game completed screen
+    /**
+     * Draws the game completed screen with rolling credits.
+     *
+     * @param g The Graphics object to draw on
+     * @return void
+     */
     private void drawGameCompleted(Graphics g) {
         g.setColor(new Color(0, 0, 0, 200)); // Semi-transparent black
         g.fillRect(0, 0, getWidth(), getHeight());
@@ -905,6 +934,13 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         drawRollingCredits(g, creditsScrollPosition);
     }
     
+    /**
+     * Draws the rolling credits content on the screen.
+     *
+     * @param g The Graphics object to draw on
+     * @param startY The starting y-coordinate for the credits content
+     * @return void
+     */
     private void drawRollingCredits(Graphics g, int startY) {
         // Set up variables for positioning
         int centerX = getWidth() / 2;
@@ -981,6 +1017,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
     
+    /**
+     * Resets the game state and restarts the game.
+     *
+     * @return void
+     */
     private void resetGame() {
         // Stop the current background music before initializing a new game
         if (backgroundMusic != null) {
@@ -1019,6 +1060,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         cutsceneFinished = false;
     }
     
+    /**
+     * Handles key press events based on the current game state.
+     *
+     * @param e The KeyEvent object representing the key press
+     * @return void
+     */
     @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
@@ -1076,6 +1123,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
     
+    /**
+     * Handles key press events during the menu state.
+     *
+     * @param key The key code from the KeyEvent
+     * @return void
+     */
     private void handleMenuKeyPress(int key) {
         if (key == KeyEvent.VK_UP) {
             menuSelection = (menuSelection - 1 + 3) % 3; // Wrap around to bottom
@@ -1097,6 +1150,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
     
+    /**
+     * Plays a sound effect for menu interactions.
+     *
+     * @param soundPath The path to the sound file
+     * @return void
+     */
     private void playMenuSound(String soundPath) {
         try {
             AudioPlayer soundEffect = new AudioPlayer(soundPath);
@@ -1107,6 +1166,13 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
     
+    /**
+     * Handles key press events during the gameplay state.
+     *
+     * @param key The key code from the KeyEvent
+     * @param isShiftDown True if the Shift key is pressed
+     * @return void
+     */
     private void handleGameplayKeyPress(int key, boolean isShiftDown) {
         // If player is attacking (but not basic attacking), ignore movement inputs
         // But allow movement during hit state (after the hit animation ends) and basic attacks
@@ -1148,6 +1214,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
 
+    /**
+     * Handles key release events during the gameplay state.
+     *
+     * @param e The KeyEvent object representing the key release
+     * @return void
+     */
     @Override
     public void keyReleased(KeyEvent e) {
         int key = e.getKeyCode();
@@ -1172,12 +1244,22 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
 
+    /**
+     * Handles key typed events (not used in this game).
+     *
+     * @param e The KeyEvent object representing the key typed
+     * @return void
+     */
     @Override
     public void keyTyped(KeyEvent e) {
         // Not used
     }
 
-    // Add method to toggle music
+    /**
+     * Toggles the background music on/off.
+     *
+     * @return void
+     */
     private void toggleMusic() {
         if (backgroundMusic != null) {
             if (musicEnabled) {
@@ -1190,13 +1272,22 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
 
-    // Add method to stop music (useful when game closing)
+    /**
+     * Stops the background music (useful when game closing).
+     *
+     * @return void
+     */
     public void stopMusic() {
         if (backgroundMusic != null) {
             backgroundMusic.stop();
         }
     }
 
+    /**
+     * Plays the door activation sound effect.
+     *
+     * @return void
+     */
     private void playDoorActivationSound() {
         try {
             AudioPlayer doorSound = new AudioPlayer("assets/sounds/door_unlock.wav");
@@ -1206,6 +1297,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
 
+    /**
+     * Handles key press events during the pause menu state.
+     *
+     * @param key The key code from the KeyEvent
+     * @return void
+     */
     private void handlePauseMenuKeyPress(int key) {
         if (key == KeyEvent.VK_UP) {
             pauseMenuSelection = (pauseMenuSelection - 1 + 3) % 3; // Wrap around to bottom
@@ -1227,6 +1324,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
 
+    /**
+     * Draws the cutscene on the screen.
+     *
+     * @param g The Graphics object to draw on
+     * @return void
+     */
     private void drawCutscene(Graphics g) {
         // Black background during cutscene
         g.setColor(Color.BLACK);
@@ -1307,13 +1410,27 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
 
+    /**
+     * Handles key presses during cutscene playback.
+     * Allows the player to skip the cutscene with ESC, ENTER, or SPACE.
+     *
+     * @param key The key code from the KeyEvent
+     * @return void
+     */
     private void handleCutsceneKeyPress(int key) {
         if (key == KeyEvent.VK_ESCAPE || key == KeyEvent.VK_ENTER || key == KeyEvent.VK_SPACE) {
             endCutscene();
         }
     }
     
-    // Play a cutscene 
+    /**
+     * Plays a cutscene from the given resource path.
+     * Handles both MP4 videos (pre-extracted to image frames) and image sequence cutscenes.
+     * Stops background music and prepares cutscene audio.
+     *
+     * @param resourcePath Path to the cutscene resource (MP4 file or directory of images)
+     * @return void
+     */
     private void playCutscene(String resourcePath) {
         currentCutscene = resourcePath;
         cutsceneFinished = false;
@@ -1354,6 +1471,14 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
     
+    /**
+     * Loads cutscene frames from a directory path.
+     * Stores file references rather than loaded images to conserve memory.
+     * Loads only the first frame initially, with others loaded on demand.
+     *
+     * @param basePath Path to the directory containing cutscene frame images
+     * @return void
+     */
     private void loadCutsceneFrames(String basePath) {
         try {
             // Check if basePath is a directory
@@ -1398,6 +1523,13 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
     
+    /**
+     * Starts the cutscene animation sequence using a timer.
+     * Loads frames on demand to conserve memory.
+     * Uses a 60 FPS frame rate for smooth animation.
+     *
+     * @return void
+     */
     private void startCutsceneAnimation() {
         if (cutsceneFrameFiles != null && totalCutsceneFrames > 0) {
             // For smoother animation, use a proper frame rate
@@ -1432,6 +1564,13 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
     
+    /**
+     * Ends the cutscene, releasing resources and transitioning to gameplay.
+     * Stops the animation timer, audio playback, and clears cutscene resources.
+     * Resets the game state and transitions to PLAYING state.
+     *
+     * @return void
+     */
     private void endCutscene() {
         // Stop animation timer if running
         if (cutsceneTimer != null && cutsceneTimer.isRunning()) {

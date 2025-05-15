@@ -4,6 +4,10 @@ import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * Represents the player character in the game.
+ * Handles player movement, combat, animations, and attributes such as health and mana.
+ */
 public class Player {
     private Rectangle bounds;
     private Rectangle hurtbox; // Added hurtbox for attack collision detection
@@ -56,6 +60,18 @@ public class Player {
     private int previousHeight = 39;
     private int previousFrameCount = 6;
 
+    /**
+     * Constructor for the Player class.
+     * Creates a player with the specified position, dimensions, and sprite.
+     * 
+     * @param x int X-coordinate of the player
+     * @param y int Y-coordinate of the player
+     * @param width int Width of the player sprite
+     * @param height int Height of the player sprite
+     * @param spriteFile String Path to the sprite sheet file
+     * @param frameCount int Number of animation frames in the sprite sheet
+     * @return void
+     */
     public Player(int x, int y, int width, int height, String spriteFile, int frameCount) {
         int scaledWidth = width * 2;
         int scaledHeight = height * 2;
@@ -81,6 +97,12 @@ public class Player {
         }
     }
 
+    /**
+     * Updates the player's state each frame.
+     * Handles gravity, movement, animation, attack cooldowns, mana regeneration, and other state changes.
+     * 
+     * @return void
+     */
     public void update() {
         speedY += GRAVITY;
         
@@ -177,7 +199,12 @@ public class Player {
         }
     }
 
-    // Method to update hurtbox position
+    /**
+     * Updates the position of the player's attack hitbox (hurtbox).
+     * Positions and sizes the hurtbox based on the player's facing direction and attack type.
+     * 
+     * @return void
+     */
     private void updateHurtbox() {
         if (isAttacking || isBasicAttacking) {
             // Set hurtbox dimensions - adjust these values as needed
@@ -198,23 +225,28 @@ public class Player {
                     bounds.x - hurtboxWidth, // Position left of player
                     bounds.y + bounds.height / 4, // Center vertically
                     hurtboxWidth,
-                    hurtboxHeight
-                );
+                    hurtboxHeight);
             } else {
                 // Position hurtbox to the right of player
                 hurtbox.setBounds(
                     bounds.x + bounds.width, // Position right of player
                     bounds.y + bounds.height / 4, // Center vertically
                     hurtboxWidth,
-                    hurtboxHeight
-                );
+                    hurtboxHeight);
             }
         } else {
-            // If not attacking, set hurtbox to zero size
+            // No hurtbox when not attacking
             hurtbox.setBounds(0, 0, 0, 0);
         }
     }
 
+    /**
+     * Checks for collision with a platform and adjusts player position accordingly.
+     * Handles different collision cases (top, left, right) based on player's movement direction.
+     * 
+     * @param platform Platform The platform to check collision with
+     * @return void
+     */
     public void checkCollision(Platform platform) {
         if (bounds.intersects(platform.getBounds())) {
             Rectangle platformBounds = platform.getBounds();
@@ -237,6 +269,13 @@ public class Player {
         }
     }
 
+    /**
+     * Moves the player left.
+     * Updates the player's horizontal speed and facing direction.
+     * Does not move the player if they are in the middle of an attack.
+     * 
+     * @return void
+     */
     public void moveLeft() {
         if (!isAttacking) { // Only check if not attacking, allow during basic attack
             speedX = -4;
@@ -244,6 +283,13 @@ public class Player {
         }
     }
 
+    /**
+     * Moves the player right.
+     * Updates the player's horizontal speed and facing direction.
+     * Does not move the player if they are in the middle of an attack.
+     * 
+     * @return void
+     */
     public void moveRight() {
         if (!isAttacking) { // Only check if not attacking, allow during basic attack
             speedX = 4;
@@ -251,6 +297,12 @@ public class Player {
         }
     }
 
+    /**
+     * Makes the player jump with normal strength.
+     * Only works if the player is on a platform (not midair) and not attacking.
+     * 
+     * @return void
+     */
     public void jump() {
         // Only allow jumping if on a platform
         if (speedY == 0 && !isAttacking) { // Only check if not attacking, allow during basic attack
@@ -258,6 +310,12 @@ public class Player {
         }
     }
 
+    /**
+     * Makes the player jump with extra strength.
+     * Only works if the player is on a platform (not midair) and not attacking.
+     * 
+     * @return void
+     */
     public void highJump() {
         // Only allow jumping if on a platform
         if (speedY == 0 && !isAttacking) { // Only check if not attacking, allow during basic attack
@@ -265,10 +323,23 @@ public class Player {
         }
     }
 
+    /**
+     * Stops the player's horizontal movement.
+     * Sets horizontal speed to zero.
+     * 
+     * @return void
+     */
     public void stop() {
         speedX = 0;
     }
 
+    /**
+     * Starts the charging animation and state.
+     * Used for mana regeneration and preparing for an attack.
+     * Changes player sprite to charging animation.
+     * 
+     * @return void
+     */
     public void startCharging() {
         if (!isCharging) {
             isCharging = true;
@@ -276,6 +347,11 @@ public class Player {
         }
     }
 
+    /**
+     * Stops the charging state and returns to idle animation.
+     * 
+     * @return void
+     */
     public void stopCharging() {
         if (isCharging) {
             isCharging = false;
@@ -283,6 +359,12 @@ public class Player {
         }
     }
 
+    /**
+     * Performs a super attack if the player has enough mana.
+     * Changes sprite, consumes mana, and plays attack sound.
+     * 
+     * @return void
+     */
     public void attack() {
         // Only allow attack if player has enough mana and isn't in hit state
         if (!isAttacking && !isBasicAttacking && currentMana >= ATTACK_MANA_COST) {
@@ -298,6 +380,12 @@ public class Player {
         }
     }
 
+    /**
+     * Performs a basic attack that doesn't require mana.
+     * Changes sprite and plays basic attack sound.
+     * 
+     * @return void
+     */
     public void basicAttack() {
         if (!isAttacking && !isBasicAttacking) { // Only allow basic attack if not already attacking
             // Start basic attack
@@ -312,6 +400,11 @@ public class Player {
         }
     }
 
+    /**
+     * Stops the super attack animation and returns to idle state.
+     * 
+     * @return void
+     */
     public void stopAttack() {
         if (isAttacking) {
             isAttacking = false;
@@ -319,6 +412,11 @@ public class Player {
         }
     }
 
+    /**
+     * Stops the basic attack animation and returns to idle state.
+     * 
+     * @return void
+     */
     public void stopBasicAttack() {
         if (isBasicAttacking) {
             isBasicAttacking = false;
@@ -326,7 +424,12 @@ public class Player {
         }
     }
     
-    // Start hit animation
+    /**
+     * Starts the hit animation when the player takes damage.
+     * Saves the current sprite state to return to after hit animation completes.
+     * 
+     * @return void
+     */
     private void startHitAnimation() {
         if (!isHit) {
             // Save current sprite info before changing to hit animation if not already in hit sprite
@@ -346,7 +449,11 @@ public class Player {
         }
     }
     
-    // Stop hit animation and restore previous sprite
+    /**
+     * Stops the hit animation and restores the previous sprite state.
+     * 
+     * @return void
+     */
     private void stopHitAnimation() {
         if (isHit) {
             isHit = false;
@@ -366,6 +473,16 @@ public class Player {
         }
     }
 
+    /**
+     * Changes the player's sprite sheet to a new one.
+     * Handles error cases gracefully if the new sprite cannot be loaded.
+     * 
+     * @param width int Width of the new sprite
+     * @param height int Height of the new sprite
+     * @param spriteFile String Path to the new sprite sheet file
+     * @param frameCount int Number of animation frames in the new sprite sheet
+     * @return void
+     */
     public void changeSprite(int width, int height, String spriteFile, int frameCount) {
         try {
             // Store previous state in case loading fails
@@ -396,6 +513,14 @@ public class Player {
         }
     }
 
+    /**
+     * Draws the player sprite, hitbox, health bar, and mana bar.
+     * Handles flipping sprites when facing left and positioning special sprites like attack animations.
+     * 
+     * @param g Graphics object used for drawing
+     * @param showBounds boolean Whether to show hitboxes for debugging
+     * @return void
+     */
     public void draw(Graphics g, boolean showBounds) {
         if (spriteSheet != null) {
             try {
@@ -465,7 +590,12 @@ public class Player {
         drawProfileBorder(g);
     }
 
-    // Method to draw image over the health and mana
+    /**
+     * Draws the profile border image containing the player's portrait.
+     * 
+     * @param g Graphics object used for drawing
+     * @return void
+     */
     private void drawProfileBorder(Graphics g) {
         int profileX = 5;
         int profileY = 14;
@@ -476,10 +606,15 @@ public class Player {
         } catch (IOException e) {
             System.out.println("Error loading profile border image: " + e.getMessage());
         }
-
     }
     
-    // Method to draw the health bar above the player
+    /**
+     * Draws the health bar at the top of the screen.
+     * Displays the player's current health as a proportion of maximum health.
+     * 
+     * @param g Graphics object used for drawing
+     * @return void
+     */
     private void drawHealthBar(Graphics g) {
         int barWidth = 150;
         int barHeight = 15;
@@ -509,7 +644,13 @@ public class Player {
         }
     }
     
-    // Method to draw the mana bar below the health bar
+    /**
+     * Draws the mana bar at the top of the screen.
+     * Displays the player's current mana as a proportion of maximum mana.
+     * 
+     * @param g Graphics object used for drawing
+     * @return void
+     */
     private void drawManaBar(Graphics g) {
         int barWidth = 150;
         int barHeight = 15;
@@ -530,15 +671,28 @@ public class Player {
         g.drawRect(barX, barY, barWidth, barHeight);
     }
     
-    // Method to use mana
+    /**
+     * Consumes mana for abilities.
+     * Decreases the player's current mana by the specified amount.
+     * 
+     * @param amount int The amount of mana to consume
+     * @return boolean True if there was enough mana to use, false otherwise
+     */
     public boolean useMana(int amount) {
         if (currentMana >= amount) {
             currentMana -= amount;
+            return true;
         }
         return false;
     }
     
-    // Method to regenerate mana
+    /**
+     * Regenerates the player's mana.
+     * Increases current mana by the specified amount, capped at maximum mana.
+     * 
+     * @param amount int The amount of mana to regenerate
+     * @return void
+     */
     public void regenerateMana(int amount) {
         currentMana += amount;
         if (currentMana > maxMana) {
@@ -546,22 +700,41 @@ public class Player {
         }
     }
     
-    // Method to get current mana
+    /**
+     * Gets the player's current mana.
+     * 
+     * @return int The current mana
+     */
     public int getCurrentMana() {
         return currentMana;
     }
     
-    // Method to get max mana
+    /**
+     * Gets the player's maximum mana.
+     * 
+     * @return int The maximum mana
+     */
     public int getMaxMana() {
         return maxMana;
     }
     
-    // Method to check if player has enough mana for an attack
+    /**
+     * Checks if the player has enough mana for a super attack.
+     * 
+     * @return boolean True if the player has enough mana, false otherwise
+     */
     public boolean hasEnoughManaForAttack() {
         return currentMana >= ATTACK_MANA_COST;
     }
     
-    // Method to take damage - now triggers hit animation
+    /**
+     * Applies damage to the player.
+     * Reduces health, triggers hit animation, and makes the player temporarily invulnerable.
+     * Does nothing if the player is already invulnerable.
+     * 
+     * @param damage int The amount of damage to apply
+     * @return void
+     */
     public void takeDamage(int damage) {
         if (!invulnerable) {
             currentHP -= damage;
@@ -581,7 +754,13 @@ public class Player {
         }
     }
     
-    // Method to heal
+    /**
+     * Heals the player.
+     * Increases health, capped at maximum health.
+     * 
+     * @param amount int The amount of health to restore
+     * @return void
+     */
     public void heal(int amount) {
         currentHP += amount;
         if (currentHP > maxHP) {
@@ -589,12 +768,20 @@ public class Player {
         }
     }
     
-    // Check if player is dead
+    /**
+     * Checks if the player is dead.
+     * 
+     * @return boolean True if the player has zero or less health, false otherwise
+     */
     public boolean isDead() {
         return currentHP <= 0;
     }
     
-    // Get attack damage based on attack type
+    /**
+     * Gets the player's attack damage based on the current attack type.
+     * 
+     * @return int The damage value for the current attack, or 0 if not attacking
+     */
     public int getAttackDamage() {
         if (isAttacking) {
             return attackDamage;
@@ -604,88 +791,184 @@ public class Player {
         return 0; // No damage if not attacking
     }
     
-    // Get current HP
+    /**
+     * Gets the player's current health.
+     * 
+     * @return int The current health
+     */
     public int getCurrentHP() {
         return currentHP;
     }
 
-    // Set current HP
+    /**
+     * Sets the player's current health.
+     * 
+     * @param currentHP int The new current health value
+     * @return void
+     */
     public void setCurrentHP(int currentHP) {
         this.currentHP = currentHP;
     }
     
-    // Get max HP
+    /**
+     * Gets the player's maximum health.
+     * 
+     * @return int The maximum health
+     */
     public int getMaxHP() {
         return maxHP;
     }
     
-    // Check if player is invulnerable
+    /**
+     * Checks if the player is currently invulnerable.
+     * 
+     * @return boolean True if the player is invulnerable, false otherwise
+     */
     public boolean isInvulnerable() {
         return invulnerable;
     }
 
-    // Add this getter method to check if player is attacking
+    /**
+     * Checks if the player is currently performing a super attack.
+     * 
+     * @return boolean True if the player is attacking, false otherwise
+     */
     public boolean isAttacking() {
         return isAttacking;
     }
 
-    // Add getter for basic attack state
+    /**
+     * Checks if the player is currently performing a basic attack.
+     * 
+     * @return boolean True if the player is performing a basic attack, false otherwise
+     */
     public boolean isBasicAttacking() {
         return isBasicAttacking;
     }
     
-    // Add getter for hit state
+    /**
+     * Checks if the player is currently in hit animation.
+     * 
+     * @return boolean True if the player is in hit animation, false otherwise
+     */
     public boolean isHit() {
         return isHit;
     }
 
+    /**
+     * Gets the player's attack hurtbox.
+     * 
+     * @return Rectangle The attack hurtbox rectangle
+     */
     public Rectangle getHurtbox() {
         return hurtbox;
     }
 
+    /**
+     * Gets the player's bounding rectangle.
+     * 
+     * @return Rectangle The bounds of the player
+     */
     public Rectangle getBounds() {
         return bounds;
     }
 
+    /**
+     * Gets the player's vertical speed.
+     * 
+     * @return int The vertical speed
+     */
     public int getSpeedY() {
         return speedY;
     }
 
+    /**
+     * Sets the player's horizontal speed.
+     * 
+     * @param speedX int The new horizontal speed
+     * @return void
+     */
     public void setSpeedX(int speedX) {
         this.speedX = speedX;
     }
 
+    /**
+     * Sets the player's facing direction.
+     * 
+     * @param facingLeft boolean True to face left, false to face right
+     * @return void
+     */
     public void setFacingLeft(boolean facingLeft) {
         this.facingLeft = facingLeft;
     }
 
-    // Add getters for protected fields needed by Enemy class
+    /**
+     * Gets the player's sprite sheet.
+     * Protected method used by child classes.
+     * 
+     * @return BufferedImage The current sprite sheet
+     */
     protected BufferedImage getSpriteSheet() {
         return spriteSheet;
     }
 
+    /**
+     * Gets the player's current animation frame index.
+     * Protected method used by child classes.
+     * 
+     * @return int The current frame index
+     */
     protected int getCurrentFrame() {
         return currentFrame;
     }
 
+    /**
+     * Gets the height of each frame in the sprite sheet.
+     * Protected method used by child classes.
+     * 
+     * @return int The frame height
+     */
     protected int getFrameHeight() {
         return frameHeight;
     }
 
+    /**
+     * Gets the width of each frame in the sprite sheet.
+     * Protected method used by child classes.
+     * 
+     * @return int The frame width
+     */
     protected int getFrameWidth() {
         return frameWidth;
     }
 
+    /**
+     * Checks if the player is facing left.
+     * Protected method used by child classes.
+     * 
+     * @return boolean True if the player is facing left, false if facing right
+     */
     protected boolean isFacingLeft() {
         return facingLeft;
     }
 
+    /**
+     * Sets the player's position to specific coordinates.
+     * 
+     * @param x int X-coordinate for the player
+     * @param y int Y-coordinate for the player
+     * @return void
+     */
     public void setPosition(int x, int y) {
         bounds.x = x;
         bounds.y = y;
     }
 
-    // Play sound for basic attack
+    /**
+     * Plays the sound effect for basic attacks.
+     * 
+     * @return void
+     */
     private void playBasicAttackSound() {
         try {
             AudioPlayer attackSound = new AudioPlayer("assets/sounds/basic_attack.wav");
@@ -695,7 +978,11 @@ public class Player {
         }
     }
     
-    // Play sound for super attack
+    /**
+     * Plays the sound effect for super attacks.
+     * 
+     * @return void
+     */
     private void playSuperAttackSound() {
         try {
             AudioPlayer attackSound = new AudioPlayer("assets/sounds/super_attack.wav");
@@ -705,7 +992,11 @@ public class Player {
         }
     }
     
-    // Play sound when player is hurt
+    /**
+     * Plays the sound effect for when the player takes damage.
+     * 
+     * @return void
+     */
     private void playHurtSound() {
         try {
             AudioPlayer hurtSound = new AudioPlayer("assets/sounds/player_hurt.wav");

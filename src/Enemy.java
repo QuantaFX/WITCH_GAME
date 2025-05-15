@@ -3,6 +3,11 @@ import java.awt.image.BufferedImage;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 
+/**
+ * Represents an enemy character in the game.
+ * Extends the Player class to inherit movement and combat capabilities.
+ * Includes AI for following and attacking the player.
+ */
 public class Enemy extends Player {
     // Static collection of enemy spawn positions from the level
     private static ArrayList<Point> enemySpawnPoints = new ArrayList<>();
@@ -42,6 +47,18 @@ public class Enemy extends Player {
     // Track if this enemy has already been hit by the current attack
     private boolean hitByCurrentAttack = false;
     
+    /**
+     * Constructor for the Enemy class.
+     * Creates an enemy with the specified position, dimensions, and sprite.
+     * 
+     * @param x int X-coordinate of the enemy
+     * @param y int Y-coordinate of the enemy
+     * @param width int Width of the enemy sprite
+     * @param height int Height of the enemy sprite
+     * @param spriteFile String Path to the sprite sheet file
+     * @param frameCount int Number of animation frames in the sprite sheet
+     * @return void
+     */
     public Enemy(int x, int y, int width, int height, String spriteFile, int frameCount){
         // Use half width for the bounds/hitbox
         super(x, y, width - 18, height, spriteFile, frameCount);
@@ -51,10 +68,22 @@ public class Enemy extends Player {
         this.currentFrameCount = frameCount;
     }
     
+    /**
+     * Sets the player as the target for this enemy to follow and attack.
+     * 
+     * @param player Player The player character to target
+     * @return void
+     */
     public void setTarget(Player player) {
         this.target = player;
     }
     
+    /**
+     * Moves the enemy left.
+     * Overrides the Player class method to handle frozen state.
+     * 
+     * @return void
+     */
     @Override
     public void moveLeft() {
         // Don't move if frozen
@@ -64,6 +93,12 @@ public class Enemy extends Player {
         setFacingLeft(true);
     }
     
+    /**
+     * Moves the enemy right.
+     * Overrides the Player class method to handle frozen state.
+     * 
+     * @return void
+     */
     @Override
     public void moveRight() {
         // Don't move if frozen
@@ -73,7 +108,13 @@ public class Enemy extends Player {
         setFacingLeft(false);
     }
     
-    // Override takeDamage to prevent sprite change from Player class
+    /**
+     * Handles enemy taking damage.
+     * Overrides the Player class method to prevent sprite change and implement freezing.
+     * 
+     * @param damage int The amount of damage to apply
+     * @return void
+     */
     @Override
     public void takeDamage(int damage) {
         // Extract the HP reduction logic without calling super.takeDamage()
@@ -102,17 +143,31 @@ public class Enemy extends Player {
         playEnemyHurtSound();
     }
     
-    // Method to reset hit tracking when player starts a new attack
+    /**
+     * Resets the hit tracking flag when player starts a new attack.
+     * Prevents the enemy from being hit multiple times by the same attack.
+     * 
+     * @return void
+     */
     public void resetHitTracking() {
         hitByCurrentAttack = false;
     }
     
-    // Method to check if enemy was already hit by current attack
+    /**
+     * Checks if this enemy was already hit by the current player attack.
+     * 
+     * @return boolean True if the enemy was hit by the current attack, false otherwise
+     */
     public boolean wasHitByCurrentAttack() {
         return hitByCurrentAttack;
     }
     
-    // Freeze enemy when hit by player
+    /**
+     * Freezes the enemy temporarily when hit.
+     * Stops movement but doesn't change the sprite.
+     * 
+     * @return void
+     */
     public void freeze() {
         frozen = true;
         frozenTimer = 0;
@@ -120,6 +175,12 @@ public class Enemy extends Player {
         // No sprite change when frozen
     }
     
+    /**
+     * Updates the enemy's state.
+     * Handles frozen state, following the player, attacking, and cooldowns.
+     * 
+     * @return void
+     */
     @Override
     public void update() {
         // Update frozen state
@@ -162,6 +223,12 @@ public class Enemy extends Player {
         super.update();
     }
     
+    /**
+     * Implements AI logic for following the player.
+     * Moves toward the player when they are at approximately the same Y level.
+     * 
+     * @return void
+     */
     public void followTarget() {
         if (target == null || frozen) return;
         
@@ -240,11 +307,23 @@ public class Enemy extends Player {
         }
     }
     
+    /**
+     * Checks if the enemy is colliding with the player.
+     * Used for determining when to attack the player.
+     * 
+     * @return boolean True if the enemy is colliding with the player, false otherwise
+     */
     public boolean isCollidingWithPlayer() {
         if (target == null) return false;
         return getBounds().intersects(target.getBounds());
     }
     
+    /**
+     * Implements the enemy's attack logic.
+     * Attacks the player when in close proximity and not on cooldown.
+     * 
+     * @return void
+     */
     public void attackPlayer() {
         if (target == null || !canAttack || frozen) return;
         
@@ -280,6 +359,14 @@ public class Enemy extends Player {
         }
     }
     
+    /**
+     * Draws the enemy on the screen.
+     * Handles different sprite sizes and orientations for enemies and bosses.
+     * 
+     * @param g Graphics object used for drawing
+     * @param showBounds boolean Whether to show hitboxes for debugging
+     * @return void
+     */
     @Override
     public void draw(Graphics g, boolean showBounds) {
         if (getSpriteSheet() != null) {
@@ -346,6 +433,16 @@ public class Enemy extends Player {
         }
     }
     
+    /**
+     * Changes the enemy's sprite.
+     * Overrides the Player class method to properly scale enemy sprites.
+     * 
+     * @param width int Width of the sprite
+     * @param height int Height of the sprite
+     * @param spriteFile String Path to the sprite sheet file
+     * @param frameCount int Number of animation frames in the sprite sheet
+     * @return void
+     */
     @Override
     public void changeSprite(int width, int height, String spriteFile, int frameCount) {
         try {
@@ -358,6 +455,11 @@ public class Enemy extends Player {
         }
     }
     
+    /**
+     * Gets the number of frames in the current sprite sheet.
+     * 
+     * @return int The number of animation frames
+     */
     protected int getFrameCount() {
         try {
             // This is a method that wasn't in the parent class, but we need it
@@ -367,20 +469,41 @@ public class Enemy extends Player {
         }
     }
     
+    /**
+     * Sets the attack damage for this enemy.
+     * 
+     * @param damage int The amount of damage this enemy deals
+     * @return void
+     */
     public void setAttackDamage(int damage) {
         this.attackDamage = damage;
     }
     
+    /**
+     * Gets the attack damage for this enemy.
+     * Overrides the Player class method.
+     * 
+     * @return int The amount of damage this enemy deals
+     */
     @Override
     public int getAttackDamage() {
         return attackDamage;
     }
     
+    /**
+     * Checks if the enemy is currently frozen.
+     * 
+     * @return boolean True if the enemy is frozen, false otherwise
+     */
     public boolean isFrozen() {
         return frozen;
     }
     
-    // Play sound when enemy is hurt
+    /**
+     * Plays a sound effect when the enemy is hurt.
+     * 
+     * @return void
+     */
     private void playEnemyHurtSound() {
         try {
             AudioPlayer hurtSound = new AudioPlayer("assets/sounds/orc_hurt.wav");
@@ -390,7 +513,13 @@ public class Enemy extends Player {
         }
     }
     
-    // Set this enemy as a boss
+    /**
+     * Sets this enemy as a boss.
+     * Bosses have increased health, damage, and size.
+     * 
+     * @param isBoss boolean Whether this enemy should be a boss
+     * @return void
+     */
     public void setBoss(boolean isBoss) {
         this.isBoss = isBoss;
         if (isBoss) {
@@ -414,22 +543,45 @@ public class Enemy extends Player {
         }
     }
     
+    /**
+     * Checks if this enemy is a boss.
+     * 
+     * @return boolean True if this enemy is a boss, false otherwise
+     */
     public boolean isBoss() {
         return isBoss;
     }
     
-    // Add a spawn point to the collection
+    /**
+     * Adds a spawn point to the static collection of spawn points.
+     * Used for boss enemies to spawn regular enemies.
+     * 
+     * @param x int X-coordinate of the spawn point
+     * @param y int Y-coordinate of the spawn point
+     * @return void
+     */
     public static void addSpawnPoint(int x, int y) {
         enemySpawnPoints.add(new Point(x, y));
     }
     
-    // Clear all spawn points (when loading a new level)
+    /**
+     * Clears all spawn points from the static collection.
+     * Used when loading a new level.
+     * 
+     * @return void
+     */
     public static void clearSpawnPoints() {
         enemySpawnPoints.clear();
         currentSpawnIndex = 0;
     }
     
-    // Spawn a normal enemy when boss is alive
+    /**
+     * Creates a new minion enemy from a random spawn point.
+     * Used by boss enemies to spawn regular enemies during battle.
+     * 
+     * @param platforms ArrayList<Platform> The list of platforms in the level
+     * @return Enemy A new enemy instance, or null if spawning is not possible
+     */
     public Enemy spawnMinion(ArrayList<Platform> platforms) {
         if (!isBoss || isDead() || enemySpawnPoints.isEmpty()) return null;
         
@@ -449,7 +601,12 @@ public class Enemy extends Player {
         return minion;
     }
     
-    // Check if it's time to spawn a minion
+    /**
+     * Checks if the boss can spawn a minion.
+     * Based on spawn timer and boss status.
+     * 
+     * @return boolean True if a minion can be spawned, false otherwise
+     */
     public boolean canSpawnMinion() {
         if (!isBoss || isDead()) return false;
         if (spawnTimer >= SPAWN_COOLDOWN) {
@@ -459,7 +616,12 @@ public class Enemy extends Player {
         return false;
     }
     
-    // Reset spawn timer (useful when a minion is actually spawned)
+    /**
+     * Resets the spawn timer.
+     * Called after spawning a minion.
+     * 
+     * @return void
+     */
     public void resetSpawnTimer() {
         spawnTimer = 0;
     }

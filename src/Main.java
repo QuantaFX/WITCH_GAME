@@ -4,9 +4,20 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 
+/**
+ * Main entry point for the Witch Game application.
+ * Initializes and configures the game window.
+ */
 public class Main extends JFrame {
     private GamePanel gamePanel;
     
+    /**
+     * Entry point of the application.
+     * Creates a new Main instance with a specified starting level from command line arguments.
+     * 
+     * @param args Command line arguments. The first argument, if provided, specifies the starting level (1-based).
+     * @return void
+     */
     public static void main(String[] args) {
         // Parse starting level from command line arguments
         int startLevel = 0; // Default to first level (index 0)
@@ -28,6 +39,14 @@ public class Main extends JFrame {
         new Main(startLevel);
     }
 
+    /**
+     * Constructor for the Main class.
+     * Sets up the JFrame window properties, initializes the game panel,
+     * and configures window behaviors.
+     * 
+     * @param startLevel The initial level index (0-based) to start the game from
+     * @return void
+     */
     public Main(int startLevel) {
         setTitle("Witch Game");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

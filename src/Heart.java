@@ -1,5 +1,9 @@
 import java.awt.*;
 
+/**
+ * Represents a heart pickup item in the game that restores player health.
+ * Hearts have a floating animation and a distinctive heart shape.
+ */
 public class Heart {
     private Rectangle bounds;
     private final int HEAL_AMOUNT = 30;
@@ -12,10 +16,24 @@ public class Heart {
     private int floatDirection = 1;
     private final int MAX_FLOAT_OFFSET = 5;
     
+    /**
+     * Constructor for the Heart class.
+     * Creates a heart pickup item at the specified position.
+     * 
+     * @param x int X-coordinate of the heart
+     * @param y int Y-coordinate of the heart
+     * @return void
+     */
     public Heart(int x, int y) {
         bounds = new Rectangle(x, y, SIZE, SIZE);
     }
     
+    /**
+     * Updates the heart's state.
+     * Handles the floating animation by updating the vertical offset.
+     * 
+     * @return void
+     */
     public void update() {
         // Simple floating animation
         floatOffset += floatDirection;
@@ -24,6 +42,13 @@ public class Heart {
         }
     }
     
+    /**
+     * Draws the heart on the screen.
+     * Renders a heart shape using basic geometric primitives.
+     * 
+     * @param g Graphics object used for drawing
+     * @return void
+     */
     public void draw(Graphics g) {
         int x = bounds.x;
         int y = bounds.y + floatOffset;
@@ -48,10 +73,21 @@ public class Heart {
         g.drawPolyline(xPoints, yPoints, 3);
     }
     
+    /**
+     * Returns the bounding rectangle of this heart.
+     * Used for collision detection with the player.
+     * 
+     * @return Rectangle The bounds of this heart
+     */
     public Rectangle getBounds() {
         return bounds;
     }
     
+    /**
+     * Returns the amount of health this heart restores when collected.
+     * 
+     * @return int The healing amount
+     */
     public int getHealAmount() {
         return HEAL_AMOUNT;
     }

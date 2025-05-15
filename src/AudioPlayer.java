@@ -2,6 +2,10 @@ import javax.sound.sampled.*;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * Audio player class for handling sound effects and background music.
+ * Provides functionality to play, stop, and control volume of audio files.
+ */
 public class AudioPlayer {
     private Clip clip;
     private boolean isPlaying = false;
@@ -9,6 +13,13 @@ public class AudioPlayer {
     private FloatControl volumeControl;
     private float currentVolume = 0.5f; // 50% volume
     
+    /**
+     * Constructor for AudioPlayer.
+     * Initializes the audio player with the specified audio file.
+     * 
+     * @param filePath String path to the audio file to load
+     * @return void
+     */
     public AudioPlayer(String filePath) {
         this.filePath = filePath;
         try {
@@ -43,6 +54,13 @@ public class AudioPlayer {
         }
     }
     
+    /**
+     * Plays the audio clip.
+     * If the clip is already playing, it will be stopped and restarted.
+     * 
+     * @param loop Boolean indicating whether the audio should loop continuously
+     * @return void
+     */
     public void play(boolean loop) {
         if (clip != null) {
             // Stop the clip first if it's currently playing
@@ -66,6 +84,11 @@ public class AudioPlayer {
         }
     }
     
+    /**
+     * Stops the audio playback if it's currently playing.
+     * 
+     * @return void
+     */
     public void stop() {
         if (clip != null && clip.isRunning()) {
             clip.stop();
@@ -73,13 +96,21 @@ public class AudioPlayer {
         }
     }
     
+    /**
+     * Checks if the audio is currently playing.
+     * 
+     * @return boolean True if the audio is playing, false otherwise
+     */
     public boolean isPlaying() {
         return isPlaying;
     }
     
     /**
-     * Sets the volume for this audio player
-     * @param volume Volume level from 0.0 (mute) to 1.0 (max volume)
+     * Sets the volume for this audio player.
+     * Converts the linear volume value to logarithmic decibels for better volume control.
+     * 
+     * @param volume Float volume level from 0.0 (mute) to 1.0 (max volume)
+     * @return void
      */
     public void setVolume(float volume) {
         if (volumeControl == null) return;
@@ -104,8 +135,9 @@ public class AudioPlayer {
     }
     
     /**
-     * Gets the current volume level
-     * @return Volume from 0.0 to 1.0
+     * Gets the current volume level.
+     * 
+     * @return float Volume from 0.0 to 1.0
      */
     public float getVolume() {
         return currentVolume;
