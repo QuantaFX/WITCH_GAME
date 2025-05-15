@@ -86,6 +86,9 @@ public class LevelManager {
                 level.addPlatform(platform);
             }
             
+            // Clear existing enemy spawn points
+            Enemy.clearSpawnPoints();
+            
             // Parse enemies
             NodeList enemyNodes = doc.getElementsByTagName("enemy");
             for (int i = 0; i < enemyNodes.getLength(); i++) {
@@ -94,6 +97,9 @@ public class LevelManager {
                 int x = Integer.parseInt(enemyElement.getAttribute("x"));
                 int y = Integer.parseInt(enemyElement.getAttribute("y"));
                 
+                // Store this position as a spawn point for bosses to use
+                Enemy.addSpawnPoint(x, y);
+                
                 // Check if this enemy is a boss
                 boolean isBoss = enemyElement.hasAttribute("boss") && 
                                  enemyElement.getAttribute("boss").equals("true");
@@ -101,8 +107,8 @@ public class LevelManager {
                 Enemy enemy = new Enemy(x, y, 36, 28, "assets/Orc_Sprite/orc_idle.png", 4);
                 
                 if (isBoss) {
-                    // Make boss stronger
-                    enemy.setAttackDamage(20);
+                    // Set boss properties
+                    enemy.setBoss(true);
                     level.setHasBoss(true);
                 }
                 

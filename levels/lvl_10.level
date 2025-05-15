@@ -8,7 +8,7 @@
   <enemies>
     <enemy x="269" y="249"/>
     <enemy x="157" y="249"/>
-    <enemy x="585" y="225"/>
+    <enemy x="585" y="225" boss="true"/>
     <enemy x="434" y="232"/>
   </enemies>
   <player x="25" y="-14"/>

@@ -24,6 +24,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private boolean gameOver = false; // Flag to track if game is over
     private Random random = new Random(); // For random heart drops
     
+    // Game completion flag
+    private boolean gameCompleted = false;
+    
     // Level management
     private LevelManager levelManager;
     private boolean levelCompleted = false;
@@ -223,11 +226,25 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             return;
         }
         
+        // Temporary list to hold new enemies to avoid ConcurrentModificationException
+        ArrayList<Enemy> newEnemies = new ArrayList<>();
+        
         // Update all enemies and check for player attack collisions
         Iterator<Enemy> enemyIterator = enemies.iterator();
         while (enemyIterator.hasNext()) {
             Enemy enemy = enemyIterator.next();
             enemy.update();
+            
+            // Check if boss should spawn minions
+            if (enemy.isBoss() && enemy.canSpawnMinion()) {
+                Enemy minion = enemy.spawnMinion(platforms);
+                if (minion != null) {
+                    minion.setTarget(player);
+                    // Instead of adding directly to the enemies list, add to newEnemies
+                    newEnemies.add(minion);
+                    enemy.resetSpawnTimer();
+                }
+            }
             
             // If player is attacking or doing basic attack, check if attack hits enemy
             if ((player.isAttacking() || player.isBasicAttacking()) && player.getHurtbox().intersects(enemy.getBounds())) {
@@ -247,13 +264,21 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                         enemyIterator.remove();
                         
                         // Check if all enemies are killed and activate the door if so
-                        if (enemies.isEmpty()) {
+                        if (enemies.isEmpty() && newEnemies.isEmpty()) {
                             Level currentLevel = levelManager.getCurrentLevel();
-                            if (currentLevel != null && currentLevel.hasDoor()) {
-                                Door door = currentLevel.getDoor();
-                                if (!door.isActive()) {
-                                    door.setActive(true);
-                                    playDoorActivationSound();
+                            if (currentLevel != null) {
+                                // If we have a door, activate it
+                                if (currentLevel.hasDoor()) {
+                                    Door door = currentLevel.getDoor();
+                                    if (!door.isActive()) {
+                                        door.setActive(true);
+                                        playDoorActivationSound();
+                                    }
+                                }
+                                
+                                // If this was the final level and had a boss, mark game as completed
+                                if (currentLevel.hasBoss() && currentLevel.getLevelNumber() == levelManager.getLevels().size()) {
+                                    gameCompleted = true;
                                 }
                             }
                         }
@@ -262,6 +287,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     }
                 }
             }
+        }
+        
+        // Now add all the new enemies after iteration is complete
+        if (!newEnemies.isEmpty()) {
+            enemies.addAll(newEnemies);
         }
         
         // Check if all enemies are killed and activate the door if so
@@ -347,6 +377,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             drawGameOver(g);
         }
         
+        // Draw game completed screen if needed
+        if (gameCompleted) {
+            drawGameCompleted(g);
+        }
+        
         // Draw level info
         drawLevelInfo(g);
     }
@@ -420,6 +455,27 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         x = (getWidth() - metrics.stringWidth(restartMessage)) / 2;
         y = getHeight() / 2 + 50;
         g.drawString(restartMessage, x, y);
+    }
+    
+    // Draw game completed screen
+    private void drawGameCompleted(Graphics g) {
+        g.setColor(new Color(0, 0, 0, 200)); // Semi-transparent black
+        g.fillRect(0, 0, getWidth(), getHeight());
+        
+        g.setColor(new Color(255, 215, 0)); // Gold color
+        g.setFont(new Font("Arial", Font.BOLD, 50));
+        FontMetrics metrics = g.getFontMetrics();
+        String message = "GAME FINISHED!";
+        int x = (getWidth() - metrics.stringWidth(message)) / 2;
+        int y = getHeight() / 2 - 30;
+        g.drawString(message, x, y);
+        
+        g.setFont(new Font("Arial", Font.BOLD, 24));
+        metrics = g.getFontMetrics();
+        String subMessage = "You've defeated the boss and all enemies!";
+        x = (getWidth() - metrics.stringWidth(subMessage)) / 2;
+        y = getHeight() / 2 + 30;
+        g.drawString(subMessage, x, y);
     }
     
     private void resetGame() {

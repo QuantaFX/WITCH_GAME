@@ -1,8 +1,13 @@
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.Rectangle;
+import java.util.ArrayList;
 
 public class Enemy extends Player {
+    // Static collection of enemy spawn positions from the level
+    private static ArrayList<Point> enemySpawnPoints = new ArrayList<>();
+    private static int currentSpawnIndex = 0;
+    
     private Player target;
     private int followSpeed = 1;
     private int followDelay = 0;
@@ -16,10 +21,18 @@ public class Enemy extends Player {
     private final int MAX_ATTACK_COOLDOWN = 60; // 1 second at 60 FPS
     private boolean canAttack = true;
     
+    // Enemy health
+    private int maxHP = 100; // Base enemy HP
+    
     // Enemy state management
     private boolean frozen = false;
     private int frozenTimer = 0;
     private final int FROZEN_DURATION = 45; // 0.75 seconds at 60 FPS
+    
+    // Boss properties
+    private boolean isBoss = false;
+    private int spawnTimer = 0;
+    private final int SPAWN_COOLDOWN = 5 * 60; // 5 seconds at 60 FPS
     
     // Track the current sprite state
     private String currentSpriteFile;
@@ -67,7 +80,9 @@ public class Enemy extends Player {
         // to avoid triggering the Player's startHitAnimation()
 
         int currentHP = getCurrentHP() - damage;
-        System.out.println("Enemy took damage: " + damage + ", current HP: " + currentHP);
+        if(isBoss){
+            System.out.println("Enemy took damage: " + damage + ", current HP: " + currentHP);
+        }
         if (currentHP < 0) {
             currentHP = 0;
         }
@@ -114,6 +129,11 @@ public class Enemy extends Player {
                 frozen = false;
                 // Do NOT change sprite when unfreezing
             }
+        }
+        
+        // Boss spawn timer
+        if (isBoss && !isDead()) {
+            spawnTimer++;
         }
         
         if (!frozen) {
@@ -236,9 +256,10 @@ public class Enemy extends Player {
                         0, y, getFrameWidth(), getFrameHeight()
                     );
     
-                    // Scale the sprite by 3x
-                    int scaledWidth = getFrameWidth() * 3;
-                    int scaledHeight = getFrameHeight() * 3;
+                    // Scale the sprite by 3x (normal) or 6x (boss)
+                    int scaleFactor = isBoss ? 6 : 3;
+                    int scaledWidth = getFrameWidth() * scaleFactor;
+                    int scaledHeight = getFrameHeight() * scaleFactor;
                     
                     Rectangle bounds = getBounds();
                     boolean facingLeft = isFacingLeft();
@@ -327,6 +348,80 @@ public class Enemy extends Player {
         } catch (Exception e) {
             System.out.println("Could not play enemy hurt sound: " + e.getMessage());
         }
+    }
+    
+    // Set this enemy as a boss
+    public void setBoss(boolean isBoss) {
+        this.isBoss = isBoss;
+        if (isBoss) {
+            // ten the health
+            setCurrentHP(getMaxHP() * 10);
+            
+            // Double attack damage
+            this.attackDamage *= 2;
+            
+            // Double the scale for rendering
+            this.originalWidth *= 2;
+            this.currentWidth *= 2;
+            
+            // Scale the hitbox/bounds
+            Rectangle bounds = getBounds();
+            int newWidth = bounds.width * 2;
+            int newHeight = bounds.height * 2;
+            // Keep the bottom edge aligned with the original position
+            int newY = bounds.y - (newHeight - bounds.height);
+            bounds.setBounds(bounds.x, newY, newWidth, newHeight);
+        }
+    }
+    
+    public boolean isBoss() {
+        return isBoss;
+    }
+    
+    // Add a spawn point to the collection
+    public static void addSpawnPoint(int x, int y) {
+        enemySpawnPoints.add(new Point(x, y));
+    }
+    
+    // Clear all spawn points (when loading a new level)
+    public static void clearSpawnPoints() {
+        enemySpawnPoints.clear();
+        currentSpawnIndex = 0;
+    }
+    
+    // Spawn a normal enemy when boss is alive
+    public Enemy spawnMinion(ArrayList<Platform> platforms) {
+        if (!isBoss || isDead() || enemySpawnPoints.isEmpty()) return null;
+        
+        // Get next spawn point in rotation
+        Point spawnPoint = enemySpawnPoints.get(currentSpawnIndex);
+        currentSpawnIndex = (currentSpawnIndex + 1) % enemySpawnPoints.size();
+        
+        // Create a new enemy at the spawn point
+        Enemy minion = new Enemy(
+            spawnPoint.x,
+            spawnPoint.y,
+            36, 28,
+            "assets/Orc_Sprite/orc_idle.png", 
+            4
+        );
+        
+        return minion;
+    }
+    
+    // Check if it's time to spawn a minion
+    public boolean canSpawnMinion() {
+        if (!isBoss || isDead()) return false;
+        if (spawnTimer >= SPAWN_COOLDOWN) {
+            spawnTimer = 0;
+            return true;
+        }
+        return false;
+    }
+    
+    // Reset spawn timer (useful when a minion is actually spawned)
+    public void resetSpawnTimer() {
+        spawnTimer = 0;
     }
 }
 
