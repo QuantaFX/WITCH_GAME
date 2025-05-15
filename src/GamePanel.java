@@ -224,12 +224,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 // No updates needed for menu
                 break;
                 
-            case CONTROLS:
-                // No updates needed for controls screen
-                break;
-                
             case PLAYING:
                 updateGamePlay();
+                break;
+                
+            case CONTROLS:
+                // No updates needed for controls screen
                 break;
                 
             case GAME_OVER:
@@ -413,10 +413,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 drawMenu(g);
                 break;
                 
-            case CONTROLS:
-                drawControlsScreen(g);
-                break;
-                
             case PLAYING:
                 drawGamePlay(g);
                 
@@ -424,6 +420,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 if (levelCompleted) {
                     drawLevelTransition(g);
                 }
+                break;
+                
+            case CONTROLS:
+                drawControlsScreen(g);
                 break;
                 
             case GAME_OVER:
@@ -697,12 +697,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 handleMenuKeyPress(key);
                 break;
                 
-            case CONTROLS:
-                if (key == KeyEvent.VK_ESCAPE) {
-                    currentState = GameState.MENU;
-                }
-                break;
-                
             case PLAYING:
                 if (key == KeyEvent.VK_ESCAPE) {
                     currentState = GameState.PAUSED;
@@ -710,6 +704,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 }
                 
                 handleGameplayKeyPress(key, isShiftDown);
+                break;
+                
+            case CONTROLS:
+                if (key == KeyEvent.VK_ESCAPE) {
+                    currentState = GameState.MENU;
+                }
                 break;
                 
             case PAUSED:

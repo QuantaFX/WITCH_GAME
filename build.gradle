@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // No external dependencies needed
+}
+
+application {
+    mainClass = 'Main'
+    
+    // Configure source directories
+    sourceSets {
+        main {
+            java {
+                srcDirs = ['src']
+            }
+        }
+    }
+}
+
+// Ensure JDK compatibility
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+// Create a fat JAR
+jar {
+    manifest {
+        attributes 'Main-Class': 'Main'
+    }
+} 
