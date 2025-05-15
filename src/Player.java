@@ -457,7 +457,7 @@ public class Player {
         int barWidth = bounds.width;
         int barHeight = 5;
         int barX = bounds.x;
-        int barY = bounds.y - 12;
+        int barY = bounds.y - 14;
         
         // Background (empty health)
         g.setColor(Color.RED);
@@ -478,7 +478,7 @@ public class Player {
         int barWidth = bounds.width;
         int barHeight = 5;
         int barX = bounds.x;
-        int barY = bounds.y - 6; // Position just below health bar
+        int barY = bounds.y - 8; // Position just below health bar
         
         // Background (empty mana)
         g.setColor(Color.GRAY);
