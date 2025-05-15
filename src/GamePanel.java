@@ -147,6 +147,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             }
         }
         
+        // Ensure door is initially inactive if there are enemies
+        if (level.hasDoor()) {
+            Door door = level.getDoor();
+            door.setActive(enemies.isEmpty());
+        }
+        
         levelCompleted = false;
         levelCompletedTimer = 0;
     }
@@ -233,10 +239,36 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                             hearts.add(heart);
                         }
                         enemyIterator.remove();
+                        
+                        // Check if all enemies are killed and activate the door if so
+                        if (enemies.isEmpty()) {
+                            Level currentLevel = levelManager.getCurrentLevel();
+                            if (currentLevel != null && currentLevel.hasDoor()) {
+                                Door door = currentLevel.getDoor();
+                                if (!door.isActive()) {
+                                    door.setActive(true);
+                                    playDoorActivationSound();
+                                }
+                            }
+                        }
+                        
                         continue;
                     }
                 }
             }
+        }
+        
+        // Check if all enemies are killed and activate the door if so
+        Level currentLevel = levelManager.getCurrentLevel();
+        if (currentLevel != null && currentLevel.hasDoor()) {
+            Door door = currentLevel.getDoor();
+            // Only activate the door if there are no enemies left
+            if (!door.isActive() && enemies.isEmpty()) {
+                door.setActive(true);
+                playDoorActivationSound();
+            }
+            // Update door animation
+            door.update();
         }
         
         // Update hearts and check for player collection
@@ -263,7 +295,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
         
         // Check door collision for level transition
-        Level currentLevel = levelManager.getCurrentLevel();
         if (currentLevel != null && currentLevel.hasDoor()) {
             Door door = currentLevel.getDoor();
             if (door.isActive() && player.getBounds().intersects(door.getBounds())) {
@@ -318,6 +349,17 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 14));
         g.drawString("Level: " + (levelManager.getCurrentLevelIndex() + 1), 10, 20);
+        
+        // Show message about killing enemies if door exists but is inactive
+        Level currentLevel = levelManager.getCurrentLevel();
+        if (currentLevel != null && currentLevel.hasDoor() && !currentLevel.getDoor().isActive() && !enemies.isEmpty()) {
+            g.setColor(new Color(255, 200, 0)); // Gold/yellow color
+            g.setFont(new Font("Arial", Font.BOLD, 14));
+            String message = "Kill all enemies to activate the door!";
+            FontMetrics metrics = g.getFontMetrics();
+            int x = (getWidth() - metrics.stringWidth(message)) / 2;
+            g.drawString(message, x, 40);
+        }
     }
     
     private void drawLevelTransition(Graphics g) {
@@ -474,6 +516,15 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     public void stopMusic() {
         if (backgroundMusic != null) {
             backgroundMusic.stop();
+        }
+    }
+
+    private void playDoorActivationSound() {
+        try {
+            AudioPlayer doorSound = new AudioPlayer("assets/sounds/door_unlock.wav");
+            doorSound.play(false);
+        } catch (Exception e) {
+            System.out.println("Could not play door activation sound: " + e.getMessage());
         }
     }
 }

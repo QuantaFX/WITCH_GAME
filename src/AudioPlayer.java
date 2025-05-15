@@ -7,7 +7,7 @@ public class AudioPlayer {
     private boolean isPlaying = false;
     private String filePath;
     private FloatControl volumeControl;
-    private float currentVolume = 0.1f; // 50% volume
+    private float currentVolume = 0.5f; // 50% volume
     
     public AudioPlayer(String filePath) {
         this.filePath = filePath;

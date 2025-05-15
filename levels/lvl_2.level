@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<level bg="../assets/Level_bg/Level1.png">
+<level bg="../assets/Level_bg/Level2.png">
   <platforms>
-    <platform height="43" width="628" x="-336" y="484"/>
-    <platform height="61" width="467" x="445" y="486"/>
-    <platform height="50" width="80" x="211" y="433"/>
-    <platform height="50" width="80" x="445" y="437"/>
+    <platform height="24" width="701" x="-337" y="490"/>
+    <platform height="27" width="390" x="492" y="487"/>
+    <platform height="69" width="68" x="294" y="421"/>
+    <platform height="65" width="69" x="494" y="420"/>
   </platforms>
   <enemies>
     <enemy x="646" y="303"/>
