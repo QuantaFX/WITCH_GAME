@@ -10,6 +10,19 @@ import java.util.Iterator;
 import java.util.Random;
 
 public class GamePanel extends JPanel implements Runnable, KeyListener {
+    // Game state enum to handle different states
+    public enum GameState {
+        MENU,       // Main menu
+        PLAYING,    // Actively playing the game
+        CONTROLS,   // Viewing controls screen
+        PAUSED,     // Game paused
+        GAME_OVER,  // Game over state
+        COMPLETED   // Game completed state
+    }
+    
+    private GameState currentState = GameState.MENU;
+    private int menuSelection = 0; // 0: Start, 1: Controls, 2: Exit
+    
     private Thread gameThread;
     private boolean running = false;
     private boolean showBounds = false;
@@ -55,6 +68,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         
         // Store the starting level
         this.startLevel = startLevel;
+        
+        // Set initial game state
+        this.currentState = GameState.MENU;
 
         // Check the OS
         isWindows = System.getProperty("os.name").toLowerCase().contains("win");
@@ -202,7 +218,37 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
 
     private void updateGame() {
+        // Handle game states
+        switch (currentState) {
+            case MENU:
+                // No updates needed for menu
+                break;
+                
+            case CONTROLS:
+                // No updates needed for controls screen
+                break;
+                
+            case PLAYING:
+                updateGamePlay();
+                break;
+                
+            case GAME_OVER:
+                // No updates needed for game over
+                break;
+                
+            case COMPLETED:
+                // No updates needed for completed
+                break;
+                
+            case PAUSED:
+                // No updates needed when paused
+                break;
+        }
+    }
+    
+    private void updateGamePlay() {
         if (gameOver) {
+            currentState = GameState.GAME_OVER;
             return; // Don't update if game is over
         }
         
@@ -215,6 +261,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 } else {
                     // No more levels, game completed
                     gameOver = true;
+                    currentState = GameState.COMPLETED;
                 }
             }
             return;
@@ -239,6 +286,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         // Check if player is dead
         if (player.isDead()) {
             gameOver = true;
+            currentState = GameState.GAME_OVER;
             return;
         }
         
@@ -295,6 +343,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                                 // If this was the final level and had a boss, mark game as completed
                                 if (currentLevel.hasBoss() && currentLevel.getLevelNumber() == levelManager.getLevels().size()) {
                                     gameCompleted = true;
+                                    currentState = GameState.COMPLETED;
                                 }
                             }
                         }
@@ -358,6 +407,43 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        
+        switch (currentState) {
+            case MENU:
+                drawMenu(g);
+                break;
+                
+            case CONTROLS:
+                drawControlsScreen(g);
+                break;
+                
+            case PLAYING:
+                drawGamePlay(g);
+                
+                // Draw level transition screen
+                if (levelCompleted) {
+                    drawLevelTransition(g);
+                }
+                break;
+                
+            case GAME_OVER:
+                drawGamePlay(g);
+                drawGameOver(g);
+                break;
+                
+            case COMPLETED:
+                drawGamePlay(g);
+                drawGameCompleted(g);
+                break;
+                
+            case PAUSED:
+                drawGamePlay(g);
+                drawPauseScreen(g);
+                break;
+        }
+    }
+    
+    private void drawGamePlay(Graphics g) {
         background.draw(g);
         
         // Draw all platforms
@@ -383,24 +469,116 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
         player.draw(g, showBounds);
         
-        // Draw level transition screen
-        if (levelCompleted) {
-            drawLevelTransition(g);
-        }
-        
-        // Draw game over screen if needed
-        if (gameOver) {
-            drawGameOver(g);
-        }
-        
-        // Draw game completed screen if needed
-        if (gameCompleted) {
-            drawGameCompleted(g);
-        }
-        
         // Draw level info
         drawLevelInfo(g);
-
+    }
+    
+    private void drawMenu(Graphics g) {
+        // Draw a dark background
+        g.setColor(Color.BLACK);
+        g.fillRect(0, 0, getWidth(), getHeight());
+        
+        // Draw game title
+        g.setColor(new Color(255, 215, 0)); // Gold color
+        g.setFont(new Font("Arial", Font.BOLD, 60));
+        FontMetrics metrics = g.getFontMetrics();
+        String title = "WITCH GAME";
+        int x = (getWidth() - metrics.stringWidth(title)) / 2;
+        g.drawString(title, x, 150);
+        
+        // Draw menu options
+        String[] options = {"Start", "Controls", "Exit"};
+        g.setFont(new Font("Arial", Font.BOLD, 30));
+        
+        for (int i = 0; i < options.length; i++) {
+            if (i == menuSelection) {
+                g.setColor(new Color(255, 215, 0)); // Gold for selected option
+            } else {
+                g.setColor(Color.WHITE);
+            }
+            
+            metrics = g.getFontMetrics();
+            x = (getWidth() - metrics.stringWidth(options[i])) / 2;
+            int y = 300 + i * 60;
+            g.drawString(options[i], x, y);
+        }
+        
+        // Draw instructions
+        g.setColor(Color.LIGHT_GRAY);
+        g.setFont(new Font("Arial", Font.PLAIN, 16));
+        String instructions = "Use UP/DOWN arrows to select, ENTER to confirm";
+        metrics = g.getFontMetrics();
+        x = (getWidth() - metrics.stringWidth(instructions)) / 2;
+        g.drawString(instructions, x, getHeight() - 50);
+    }
+    
+    private void drawControlsScreen(Graphics g) {
+        // Draw background
+        g.setColor(Color.BLACK);
+        g.fillRect(0, 0, getWidth(), getHeight());
+        
+        // Draw title
+        g.setColor(new Color(255, 215, 0));
+        g.setFont(new Font("Arial", Font.BOLD, 40));
+        String title = "CONTROLS";
+        FontMetrics metrics = g.getFontMetrics();
+        int titleX = (getWidth() - metrics.stringWidth(title)) / 2;
+        g.drawString(title, titleX, 100);
+        
+        // Draw control instructions
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.PLAIN, 20));
+        
+        String[][] controls = {
+            {"K", "Basic Attack"},
+            {"J", "Super Attack"},
+            {"L", "Charge"},
+            {"A", "Move Left"},
+            {"D", "Move Right"},
+            {"W / SPACE", "Jump"},
+            {"M", "Toggle Music"}
+        };
+        
+        int startY = 180;
+        int lineHeight = 40;
+        
+        for (int i = 0; i < controls.length; i++) {
+            // Draw key
+            g.setColor(new Color(255, 215, 0));
+            int y = startY + i * lineHeight;
+            g.drawString(controls[i][0], 250, y);
+            
+            // Draw description
+            g.setColor(Color.WHITE);
+            g.drawString("- " + controls[i][1], 380, y);
+        }
+        
+        // Draw back instruction
+        g.setColor(Color.LIGHT_GRAY);
+        g.setFont(new Font("Arial", Font.PLAIN, 16));
+        String backInstruction = "Press ESC to return to menu";
+        metrics = g.getFontMetrics();
+        int backX = (getWidth() - metrics.stringWidth(backInstruction)) / 2;
+        g.drawString(backInstruction, backX, getHeight() - 50);
+    }
+    
+    private void drawPauseScreen(Graphics g) {
+        g.setColor(new Color(0, 0, 0, 150));
+        g.fillRect(0, 0, getWidth(), getHeight());
+        
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 40));
+        String message = "PAUSED";
+        FontMetrics metrics = g.getFontMetrics();
+        int x = (getWidth() - metrics.stringWidth(message)) / 2;
+        int y = getHeight() / 2;
+        g.drawString(message, x, y);
+        
+        g.setFont(new Font("Arial", Font.PLAIN, 20));
+        String instruction = "Press ESC to resume";
+        metrics = g.getFontMetrics();
+        x = (getWidth() - metrics.stringWidth(instruction)) / 2;
+        g.drawString(instruction, x, y + 50);
     }
     
     private void drawLevelInfo(Graphics g) {
@@ -499,10 +677,14 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         // Stop the current background music before initializing a new game
         if (backgroundMusic != null) {
             backgroundMusic.stop();
+            backgroundMusic = null; // Set to null so loadCurrentLevel will start music again
         }
         
         initGame();
         gameOver = false;
+        gameCompleted = false;
+        levelCompleted = false;
+        levelCompletedTimer = 0;
     }
     
     @Override
@@ -510,19 +692,86 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         int key = e.getKeyCode();
         boolean isShiftDown = (e.getModifiersEx() & KeyEvent.SHIFT_DOWN_MASK) != 0;
         
-        // Handle game over state
-        if (gameOver) {
-            if (key == KeyEvent.VK_R) {
-                resetGame();
+        switch (currentState) {
+            case MENU:
+                handleMenuKeyPress(key);
+                break;
+                
+            case CONTROLS:
+                if (key == KeyEvent.VK_ESCAPE) {
+                    currentState = GameState.MENU;
+                }
+                break;
+                
+            case PLAYING:
+                if (key == KeyEvent.VK_ESCAPE) {
+                    currentState = GameState.PAUSED;
+                    return;
+                }
+                
+                handleGameplayKeyPress(key, isShiftDown);
+                break;
+                
+            case PAUSED:
+                if (key == KeyEvent.VK_ESCAPE) {
+                    currentState = GameState.PLAYING;
+                }
+                break;
+                
+            case GAME_OVER:
+                if (key == KeyEvent.VK_R) {
+                    resetGame();
+                    currentState = GameState.PLAYING;
+                } else if (key == KeyEvent.VK_ESCAPE) {
+                    resetGame();
+                    currentState = GameState.MENU;
+                }
+                break;
+                
+            case COMPLETED:
+                if (key == KeyEvent.VK_ESCAPE || key == KeyEvent.VK_ENTER) {
+                    resetGame();
+                    currentState = GameState.MENU;
+                }
+                break;
+        }
+    }
+    
+    private void handleMenuKeyPress(int key) {
+        if (key == KeyEvent.VK_UP) {
+            menuSelection = (menuSelection - 1 + 3) % 3; // Wrap around to bottom
+            playMenuSound("assets/sounds/menu_move.wav");
+        } else if (key == KeyEvent.VK_DOWN) {
+            menuSelection = (menuSelection + 1) % 3; // Wrap around to top
+            playMenuSound("assets/sounds/menu_move.wav");
+        } else if (key == KeyEvent.VK_ENTER) {
+            playMenuSound("assets/sounds/menu_select.wav");
+            switch (menuSelection) {
+                case 0: // Start Game
+                    resetGame();
+                    currentState = GameState.PLAYING;
+                    break;
+                case 1: // Controls
+                    currentState = GameState.CONTROLS;
+                    break;
+                case 2: // Exit
+                    System.exit(0);
+                    break;
             }
-            return;
         }
-        
-        // Don't process inputs during level transition
-        if (levelCompleted) {
-            return;
+    }
+    
+    private void playMenuSound(String soundPath) {
+        try {
+            AudioPlayer soundEffect = new AudioPlayer(soundPath);
+            soundEffect.play(false);
+        } catch (Exception e) {
+            // If sound file doesn't exist, just continue silently
+            System.out.println("Could not play menu sound: " + e.getMessage());
         }
-
+    }
+    
+    private void handleGameplayKeyPress(int key, boolean isShiftDown) {
         // If player is attacking (but not basic attacking), ignore movement inputs
         // But allow movement during hit state (after the hit animation ends) and basic attacks
         if (player.isAttacking()) {
@@ -566,6 +815,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     @Override
     public void keyReleased(KeyEvent e) {
         int key = e.getKeyCode();
+        
+        if (currentState != GameState.PLAYING) {
+            return;
+        }
         
         // Don't process movement key releases during attack animations (but allow during basic attacks)
         if (player.isAttacking()) {

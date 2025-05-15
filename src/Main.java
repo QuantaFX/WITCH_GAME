@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 
 public class Main extends JFrame {
     private GamePanel gamePanel;
@@ -28,9 +29,20 @@ public class Main extends JFrame {
     }
 
     public Main(int startLevel) {
-        setTitle("2D Platformer Game");
+        setTitle("Witch Game");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(true);
+        
+        // Try to set an icon if it exists
+        try {
+            File iconFile = new File("assets/icon.png");
+            if (iconFile.exists()) {
+                Image icon = new ImageIcon("assets/icon.png").getImage();
+                setIconImage(icon);
+            }
+        } catch (Exception e) {
+            System.out.println("Could not set icon: " + e.getMessage());
+        }
         
         gamePanel = new GamePanel(startLevel);
         add(gamePanel);
