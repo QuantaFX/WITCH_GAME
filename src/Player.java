@@ -462,19 +462,29 @@ public class Player {
         // Draw health and mana bars
         drawHealthBar(g);
         drawManaBar(g);
+        drawProfileBorder(g);
+    }
+
+    // Method to draw image over the health and mana
+    private void drawProfileBorder(Graphics g) {
+        int profileX = 5;
+        int profileY = 14;
+        //Draw Image, from assets/ProfileBar.png at the top left of the screen
+        try {
+            BufferedImage profileBorder = ImageIO.read(new File("assets/ProfileBar.png"));
+            g.drawImage(profileBorder, profileX, profileY, 232, 64, null); // Adjust size as needed
+        } catch (IOException e) {
+            System.out.println("Error loading profile border image: " + e.getMessage());
+        }
+
     }
     
     // Method to draw the health bar above the player
     private void drawHealthBar(Graphics g) {
         int barWidth = 150;
         int barHeight = 15;
-        int barX = 70; // Position at top left of screen, leaving space for portrait
+        int barX = 80; // Position at top left of screen, leaving space for portrait
         int barY = 30; // Position moved down by 10 pixels
-        
-        // Draw "Health" text
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 12));
-        g.drawString("Health", barX, barY - 5);
         
         // Background (empty health)
         g.setColor(Color.RED);
@@ -503,13 +513,8 @@ public class Player {
     private void drawManaBar(Graphics g) {
         int barWidth = 150;
         int barHeight = 15;
-        int barX = 70; // Same X as health bar
+        int barX = 80; // Same X as health bar
         int barY = 60; // Position moved down by 10 pixels
-        
-        // Draw "Mana" text
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 12));
-        g.drawString("Mana", barX, barY - 5);
         
         // Background (empty mana)
         g.setColor(Color.GRAY);

@@ -384,6 +384,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         
         // Draw level info
         drawLevelInfo(g);
+
     }
     
     private void drawLevelInfo(Graphics g) {
