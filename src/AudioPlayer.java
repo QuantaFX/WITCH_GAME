@@ -29,6 +29,15 @@ public class AudioPlayer {
                 volumeControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
                 setVolume(currentVolume);
             }
+            
+            // Add line listener to update isPlaying flag when clip stops
+            clip.addLineListener(event -> {
+                if (event.getType() == LineEvent.Type.STOP) {
+                    isPlaying = false;
+                } else if (event.getType() == LineEvent.Type.START) {
+                    isPlaying = true;
+                }
+            });
         } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
             System.out.println("Error initializing audio player: " + e.getMessage());
         }
@@ -36,10 +45,22 @@ public class AudioPlayer {
     
     public void play(boolean loop) {
         if (clip != null) {
+            // Stop the clip first if it's currently playing
+            if (clip.isRunning()) {
+                clip.stop();
+            }
+            
+            // Reset to the beginning
             clip.setFramePosition(0);
+            
+            // Set up looping if requested
             if (loop) {
                 clip.loop(Clip.LOOP_CONTINUOUSLY);
+            } else {
+                clip.loop(0); // No looping
             }
+            
+            // Start playback
             clip.start();
             isPlaying = true;
         }

@@ -43,6 +43,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     // Starting level index (0-based)
     private int startLevel = 0;
 
+    private boolean isPlayingBossMusic = false; // Track whether we're playing boss music
+
     public GamePanel() {
         this(0); // Default to first level (index 0)
     }
@@ -93,30 +95,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             }
         }
         
+        // Load the current level (which will also initialize the music)
         loadCurrentLevel();
-
-        // Initialize background music
-        // Note: Using WAV format as it's natively supported by Java Sound API
-        // You can convert MP3 files to WAV using online converters or tools
-        String musicFile = "assets/music/sorcer_chill_wave.wav";
-
-        // Check if music file exists
-        File file = new File(musicFile);
-        if (file.exists()) {
-            // Only create a new AudioPlayer if one doesn't exist or if it's not playing
-            if (backgroundMusic == null) {
-                backgroundMusic = new AudioPlayer(musicFile);
-                if (musicEnabled) {
-                    backgroundMusic.play(true); // Start playing in a loop
-                }
-            } else if (musicEnabled && !backgroundMusic.isPlaying()) {
-                // If music is enabled but not playing, start it
-                backgroundMusic.play(true);
-            }
-        } else {
-            System.out.println("Background music file not found: " + musicFile);
-            System.out.println("Please place a WAV audio file at: " + musicFile);
-        }
     }
     
     private void loadCurrentLevel() {
@@ -160,6 +140,42 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         if (level.hasDoor()) {
             Door door = level.getDoor();
             door.setActive(enemies.isEmpty());
+        }
+        
+        // Only change music when entering or leaving a boss level
+        boolean isBossLevel = level.hasBoss();
+        
+        // Check if we need to change the music
+        if (isBossLevel != isPlayingBossMusic) {
+            // We need to change music
+            if (backgroundMusic != null) {
+                backgroundMusic.stop();
+            }
+            
+            String musicFile = isBossLevel ? "assets/music/sorcera_boss.wav" : "assets/music/sorcer_chill_wave.wav";
+            
+            // Check if music file exists
+            File file = new File(musicFile);
+            if (file.exists()) {
+                backgroundMusic = new AudioPlayer(musicFile);
+                if (musicEnabled) {
+                    backgroundMusic.play(true); // Start playing in a loop
+                }
+                isPlayingBossMusic = isBossLevel; // Update our tracking variable
+            } else {
+                System.out.println("Music file not found: " + musicFile);
+            }
+        } else if (backgroundMusic == null) {
+            // Initialize music for the first time
+            String musicFile = isBossLevel ? "assets/music/sorcera_boss.wav" : "assets/music/sorcer_chill_wave.wav";
+            File file = new File(musicFile);
+            if (file.exists()) {
+                backgroundMusic = new AudioPlayer(musicFile);
+                if (musicEnabled) {
+                    backgroundMusic.play(true);
+                }
+                isPlayingBossMusic = isBossLevel;
+            }
         }
         
         levelCompleted = false;
