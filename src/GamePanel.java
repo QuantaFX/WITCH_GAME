@@ -8,6 +8,10 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.Iterator;
 import java.util.Random;
+import javax.swing.ImageIcon;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 
 public class GamePanel extends JPanel implements Runnable, KeyListener {
     // Game state enum to handle different states
@@ -22,6 +26,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     
     private GameState currentState = GameState.MENU;
     private int menuSelection = 0; // 0: Start, 1: Controls, 2: Exit
+    
+    private int pauseMenuSelection = 0; // 0: Resume, 1: Help/Controls, 2: Exit
     
     private Thread gameThread;
     private boolean running = false;
@@ -57,6 +63,27 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private int startLevel = 0;
 
     private boolean isPlayingBossMusic = false; // Track whether we're playing boss music
+
+    private Image menuBackground;
+    private Image sorcera;
+    private Image[] playButtons;
+    private Image[] helpButtons;
+    private Image[] exitButtons;
+    private Image menuBar; // Menu bar background for buttons
+
+    // Button images for controls screen
+    private Image[] controlButtons;
+
+    // Button sprites for controls screen
+    private BufferedImage[][] controlButtonFrames; // Store all frames for each button
+    private int[] buttonCurrentFrame;              // Current frame for each button
+    private int buttonAnimCounter = 0;             // Animation counter for buttons
+    private final int BUTTON_ANIM_SPEED = 10;      // Speed of button animation
+
+    // For rolling credits
+    private int creditsScrollPosition;
+    private boolean creditsInitialized = false;
+    private final int CREDITS_SCROLL_SPEED = 1;
 
     public GamePanel() {
         this(0); // Default to first level (index 0)
@@ -113,6 +140,57 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         
         // Load the current level (which will also initialize the music)
         loadCurrentLevel();
+
+        // Load menu images
+        try {
+            menuBackground = new ImageIcon("assets/Menu/Menu_BG.png").getImage();
+            
+            // Load and scale Sorcera logo to half size
+            Image originalSorcera = new ImageIcon("assets/Menu/Sorcera.png").getImage();
+            int newWidth = originalSorcera.getWidth(null) / 2;
+            int newHeight = originalSorcera.getHeight(null) / 2;
+            sorcera = originalSorcera.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+            
+            // Load menu bar image
+            menuBar = new ImageIcon("assets/Menu/MenuBar.png").getImage();
+            
+            // Load button images
+            playButtons = new Image[3];
+            helpButtons = new Image[3];
+            exitButtons = new Image[3];
+            
+            for (int i = 1; i <= 3; i++) {
+                // Load original button images
+                Image originalPlayBtn = new ImageIcon("assets/Menu/Play_btn/Play_btn" + i + ".png").getImage();
+                Image originalHelpBtn = new ImageIcon("assets/Menu/Help_btn/Help_btn" + i + ".png").getImage();
+                Image originalExitBtn = new ImageIcon("assets/Menu/Exit_btn/Exit_btn" + i + ".png").getImage();
+                
+                // Scale them to half size
+                playButtons[i-1] = originalPlayBtn.getScaledInstance(
+                    originalPlayBtn.getWidth(null) / 2,
+                    originalPlayBtn.getHeight(null) / 2,
+                    Image.SCALE_SMOOTH);
+                
+                helpButtons[i-1] = originalHelpBtn.getScaledInstance(
+                    originalHelpBtn.getWidth(null) / 2, 
+                    originalHelpBtn.getHeight(null) / 2,
+                    Image.SCALE_SMOOTH);
+                
+                exitButtons[i-1] = originalExitBtn.getScaledInstance(
+                    originalExitBtn.getWidth(null) / 2,
+                    originalExitBtn.getHeight(null) / 2,
+                    Image.SCALE_SMOOTH);
+            }
+            
+            // Load control button sprites (for controls screen)
+            String[] controlKeys = {"K", "J", "L", "A", "D", "W"};
+            controlButtons = new Image[controlKeys.length];
+            
+            // We'll load control buttons on demand in the drawControlsScreen method
+            // via the loadControlButtons method to properly handle the sprite states
+        } catch (Exception e) {
+            System.out.println("Error loading menu images: " + e.getMessage());
+        }
     }
     
     private void loadCurrentLevel() {
@@ -474,48 +552,67 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
     
     private void drawMenu(Graphics g) {
-        // Draw a dark background
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, getWidth(), getHeight());
-        
-        // Draw game title
-        g.setColor(new Color(255, 215, 0)); // Gold color
-        g.setFont(new Font("Arial", Font.BOLD, 60));
-        FontMetrics metrics = g.getFontMetrics();
-        String title = "WITCH GAME";
-        int x = (getWidth() - metrics.stringWidth(title)) / 2;
-        g.drawString(title, x, 150);
-        
-        // Draw menu options
-        String[] options = {"Start", "Controls", "Exit"};
-        g.setFont(new Font("Arial", Font.BOLD, 30));
-        
-        for (int i = 0; i < options.length; i++) {
-            if (i == menuSelection) {
-                g.setColor(new Color(255, 215, 0)); // Gold for selected option
-            } else {
-                g.setColor(Color.WHITE);
-            }
-            
-            metrics = g.getFontMetrics();
-            x = (getWidth() - metrics.stringWidth(options[i])) / 2;
-            int y = 300 + i * 60;
-            g.drawString(options[i], x, y);
+        // Draw the menu background
+        if (menuBackground != null) {
+            g.drawImage(menuBackground, 0, 0, getWidth(), getHeight(), null);
+        } else {
+            // Fallback to black background
+            g.setColor(Color.BLACK);
+            g.fillRect(0, 0, getWidth(), getHeight());
         }
         
-        // Draw instructions
-        g.setColor(Color.LIGHT_GRAY);
-        g.setFont(new Font("Arial", Font.PLAIN, 16));
-        String instructions = "Use UP/DOWN arrows to select, ENTER to confirm";
-        metrics = g.getFontMetrics();
-        x = (getWidth() - metrics.stringWidth(instructions)) / 2;
-        g.drawString(instructions, x, getHeight() - 50);
+        // Draw logo image at the top
+        if (sorcera != null) {
+            int logoX = (getWidth() - sorcera.getWidth(null)) / 2;
+            g.drawImage(sorcera, logoX, 80, null);
+        }
+        
+        // Draw menu button images
+        int startY = 250;  // Moved up from 300 to better position smaller buttons
+        int spacing = 100;  // Increased from 50 to add more vertical padding between buttons
+        
+        // Draw menu bar behind buttons
+        if (menuBar != null) {
+            // Position menu bar to cover all buttons with some padding
+            int menuBarX = (getWidth() - menuBar.getWidth(null)) / 2;
+            int menuBarY = startY - 80; // Moved down by another 20px
+            
+            // Use original image dimensions
+            g.drawImage(menuBar, menuBarX, menuBarY, null);
+        }
+        
+        for (int i = 0; i < 3; i++) {
+            Image buttonImage = null;
+            
+            switch (i) {
+                case 0: // Start
+                    buttonImage = playButtons != null ? playButtons[menuSelection == i ? 1 : 0] : null;
+                    break;
+                case 1: // Controls/Help
+                    buttonImage = helpButtons != null ? helpButtons[menuSelection == i ? 1 : 0] : null;
+                    break;
+                case 2: // Exit
+                    buttonImage = exitButtons != null ? exitButtons[menuSelection == i ? 1 : 0] : null;
+                    break;
+            }
+            
+            if (buttonImage != null) {
+                int buttonX = (getWidth() - buttonImage.getWidth(null)) / 2;
+                int buttonY = startY + i * spacing;
+                g.drawImage(buttonImage, buttonX, buttonY, null);
+            }
+        }
     }
     
     private void drawControlsScreen(Graphics g) {
-        // Draw background
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, getWidth(), getHeight());
+        // Draw menu background instead of black background
+        if (menuBackground != null) {
+            g.drawImage(menuBackground, 0, 0, getWidth(), getHeight(), null);
+        } else {
+            // Fallback to black background
+            g.setColor(Color.BLACK);
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
         
         // Draw title
         g.setColor(new Color(255, 215, 0));
@@ -525,32 +622,71 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         int titleX = (getWidth() - metrics.stringWidth(title)) / 2;
         g.drawString(title, titleX, 100);
         
-        // Draw control instructions
+        // Draw control instructions with button sprites
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.PLAIN, 20));
         
+        // Control keys and descriptions
         String[][] controls = {
             {"K", "Basic Attack"},
             {"J", "Super Attack"},
             {"L", "Charge"},
             {"A", "Move Left"},
             {"D", "Move Right"},
-            {"W / SPACE", "Jump"},
-            {"M", "Toggle Music"}
+            {"W", "Jump"},
+            {"Space", "Jump (alternative)"},
         };
         
-        int startY = 180;
-        int lineHeight = 40;
+        // Load button sprites if not loaded yet
+        if (controlButtonFrames == null) {
+            loadControlButtonSprites(controls);
+        }
+        
+        // Update animation counter
+        buttonAnimCounter++;
+        if (buttonAnimCounter >= BUTTON_ANIM_SPEED) {
+            buttonAnimCounter = 0;
+            // Update frame for each button
+            for (int i = 0; i < buttonCurrentFrame.length; i++) {
+                buttonCurrentFrame[i] = (buttonCurrentFrame[i] + 1) % 4; // Cycle through 4 frames
+            }
+        }
+        
+        int startY = 160;      // Move up slightly
+        int lineHeight = 50;   // Reduce spacing between items
+        int buttonX = 250;     // Keep same X position
+        int textX = 350;       // Move text closer to button
+        float buttonScale = 1.5f; // Scale factor for buttons
         
         for (int i = 0; i < controls.length; i++) {
-            // Draw key
-            g.setColor(new Color(255, 215, 0));
-            int y = startY + i * lineHeight;
-            g.drawString(controls[i][0], 250, y);
+            // Draw key button sprite (animated)
+            if (controlButtonFrames != null && controlButtonFrames[i] != null) {
+                // Get current frame for this button
+                BufferedImage currentFrame = controlButtonFrames[i][buttonCurrentFrame[i]];
+                if (currentFrame != null) {
+                    // Calculate scaled dimensions
+                    int origWidth = currentFrame.getWidth();
+                    int origHeight = currentFrame.getHeight();
+                    int scaledWidth = (int)(origWidth * buttonScale);
+                    int scaledHeight = (int)(origHeight * buttonScale);
+                    
+                    // Calculate position with scaling taken into account
+                    int y = startY + i * lineHeight - scaledHeight/2; // Center vertically
+                    
+                    // Draw scaled button
+                    g.drawImage(currentFrame, 
+                                buttonX - scaledWidth/2, 
+                                y, 
+                                scaledWidth, 
+                                scaledHeight, 
+                                null);
+                }
+            }
             
             // Draw description
             g.setColor(Color.WHITE);
-            g.drawString("- " + controls[i][1], 380, y);
+            int y = startY + i * lineHeight + 10; // Adjusted text position to align with button
+            g.drawString("- " + controls[i][1], textX, y);
         }
         
         // Draw back instruction
@@ -562,23 +698,92 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         g.drawString(backInstruction, backX, getHeight() - 50);
     }
     
+    private void loadControlButtonSprites(String[][] controls) {
+        try {
+            int numControls = controls.length;
+            controlButtonFrames = new BufferedImage[numControls][4]; // 4 frames per button
+            buttonCurrentFrame = new int[numControls]; // Current frame for each button
+            
+            for (int i = 0; i < numControls; i++) {
+                String key = controls[i][0];
+                buttonCurrentFrame[i] = 0; // Initialize to first frame
+                
+                try {
+                    // Load the button sprite sheet
+                    File buttonFile = new File("assets/Buttons/" + key + ".png");
+                    if (buttonFile.exists()) {
+                        BufferedImage fullSprite = ImageIO.read(buttonFile);
+                        
+                        // Each button sprite has 4 states vertically stacked
+                        int totalHeight = fullSprite.getHeight();
+                        int frameHeight = totalHeight / 4; // Divide by 4 states
+                        int frameWidth = fullSprite.getWidth();
+                        
+                        // Extract all 4 frames from the sprite sheet (vertically)
+                        for (int frame = 0; frame < 4; frame++) {
+                            controlButtonFrames[i][frame] = fullSprite.getSubimage(
+                                0, frame * frameHeight, frameWidth, frameHeight);
+                        }
+                    } else {
+                        System.out.println("Button sprite not found: " + buttonFile.getAbsolutePath());
+                    }
+                } catch (IOException e) {
+                    System.out.println("Error loading button sprite for " + key + ": " + e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Error loading control button sprites: " + e.getMessage());
+        }
+    }
+    
     private void drawPauseScreen(Graphics g) {
         g.setColor(new Color(0, 0, 0, 150));
         g.fillRect(0, 0, getWidth(), getHeight());
         
+        // Draw title
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 40));
         String message = "PAUSED";
         FontMetrics metrics = g.getFontMetrics();
         int x = (getWidth() - metrics.stringWidth(message)) / 2;
-        int y = getHeight() / 2;
+        int y = 150;
         g.drawString(message, x, y);
         
-        g.setFont(new Font("Arial", Font.PLAIN, 20));
-        String instruction = "Press ESC to resume";
-        metrics = g.getFontMetrics();
-        x = (getWidth() - metrics.stringWidth(instruction)) / 2;
-        g.drawString(instruction, x, y + 50);
+        // Draw menu buttons (Resume, Help, Exit)
+        int startY = 230;
+        int spacing = 100;
+        
+        // Draw menu bar behind buttons
+        if (menuBar != null) {
+            // Position menu bar to cover all buttons with some padding
+            int menuBarX = (getWidth() - menuBar.getWidth(null)) / 2;
+            int menuBarY = startY - 80; // Moved down by another 20px
+            
+            // Use original image dimensions
+            g.drawImage(menuBar, menuBarX, menuBarY, null);
+        }
+        
+        for (int i = 0; i < 3; i++) {
+            Image buttonImage = null;
+            
+            switch (i) {
+                case 0: // Resume
+                    buttonImage = playButtons != null ? playButtons[pauseMenuSelection == i ? 1 : 0] : null;
+                    break;
+                case 1: // Controls
+                    buttonImage = helpButtons != null ? helpButtons[pauseMenuSelection == i ? 1 : 0] : null;
+                    break;
+                case 2: // Exit
+                    buttonImage = exitButtons != null ? exitButtons[pauseMenuSelection == i ? 1 : 0] : null;
+                    break;
+            }
+            
+            if (buttonImage != null) {
+                int buttonX = (getWidth() - buttonImage.getWidth(null)) / 2;
+                int buttonY = startY + i * spacing;
+                g.drawImage(buttonImage, buttonX, buttonY, null);
+            }
+        }
     }
     
     private void drawLevelInfo(Graphics g) {
@@ -657,20 +862,98 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         g.setColor(new Color(0, 0, 0, 200)); // Semi-transparent black
         g.fillRect(0, 0, getWidth(), getHeight());
         
+        // Initialize credits position if needed
+        if (!creditsInitialized) {
+            creditsScrollPosition = getHeight();
+            creditsInitialized = true;
+        }
+        
+        // Update credits position (roll up)
+        creditsScrollPosition -= CREDITS_SCROLL_SPEED;
+        
+        // Reset credits when they roll past the top
+        if (creditsScrollPosition < -800) { // Approximate height of all credits content
+            creditsScrollPosition = getHeight();
+        }
+        
+        // Draw rolling credits
+        drawRollingCredits(g, creditsScrollPosition);
+    }
+    
+    private void drawRollingCredits(Graphics g, int startY) {
+        // Set up variables for positioning
+        int centerX = getWidth() / 2;
+        int currentY = startY;
+        int lineSpacing = 40;
+        
+        // Use anti-aliasing for smoother text
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        
+        // Draw Sorcera logo at the top of credits
+        if (sorcera != null) {
+            int logoX = centerX - sorcera.getWidth(null) / 2;
+            g.drawImage(sorcera, logoX, currentY, null);
+            currentY += sorcera.getHeight(null) + lineSpacing;
+        } else {
+            currentY += 100; // Space if logo not available
+        }
+        
+        // Draw "Credits" title
         g.setColor(new Color(255, 215, 0)); // Gold color
-        g.setFont(new Font("Arial", Font.BOLD, 50));
-        FontMetrics metrics = g.getFontMetrics();
-        String message = "GAME FINISHED!";
-        int x = (getWidth() - metrics.stringWidth(message)) / 2;
-        int y = getHeight() / 2 - 30;
-        g.drawString(message, x, y);
+        g.setFont(new Font("Arial", Font.BOLD, 40));
+        FontMetrics titleMetrics = g.getFontMetrics();
+        g.drawString("Credits", centerX - titleMetrics.stringWidth("Credits") / 2, currentY);
+        currentY += lineSpacing * 2;
+        
+        // Draw team members
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 24));
+        FontMetrics nameMetrics = g.getFontMetrics();
+        
+        String[] names = {
+            "Archie Junio",
+            "Von Uyvico",
+            "Nathan Palanas"
+        };
+        
+        String[] roles = {
+            "Game Developer / Graphics Artist",
+            "Game Developer / Music & Video",
+            "Game Developer / Level Editor"
+        };
         
         g.setFont(new Font("Arial", Font.BOLD, 24));
-        metrics = g.getFontMetrics();
-        String subMessage = "You've defeated the boss and all enemies!";
-        x = (getWidth() - metrics.stringWidth(subMessage)) / 2;
-        y = getHeight() / 2 + 30;
-        g.drawString(subMessage, x, y);
+        for (int i = 0; i < names.length; i++) {
+            g.setColor(Color.WHITE);
+            g.drawString(names[i], centerX - nameMetrics.stringWidth(names[i]) / 2, currentY);
+            currentY += lineSpacing;
+            
+            g.setColor(Color.LIGHT_GRAY);
+            g.setFont(new Font("Arial", Font.ITALIC, 18));
+            FontMetrics roleMetrics = g.getFontMetrics();
+            g.drawString(roles[i], centerX - roleMetrics.stringWidth(roles[i]) / 2, currentY);
+            
+            currentY += lineSpacing * 2;
+            g.setFont(new Font("Arial", Font.BOLD, 24));
+        }
+        
+        // Draw footer text
+        currentY += lineSpacing;
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.PLAIN, 16));
+        FontMetrics footerMetrics = g.getFontMetrics();
+        
+        String[] footerText = {
+            "All rights reserved.",
+            "To god be the glory.",
+            "Audited Version 3.4.0"
+        };
+        
+        for (String line : footerText) {
+            g.drawString(line, centerX - footerMetrics.stringWidth(line) / 2, currentY);
+            currentY += lineSpacing;
+        }
     }
     
     private void resetGame() {
@@ -685,6 +968,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         gameCompleted = false;
         levelCompleted = false;
         levelCompletedTimer = 0;
+        menuSelection = 0;
+        pauseMenuSelection = 0;
+        creditsInitialized = false;
     }
     
     @Override
@@ -715,6 +1001,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             case PAUSED:
                 if (key == KeyEvent.VK_ESCAPE) {
                     currentState = GameState.PLAYING;
+                } else {
+                    handlePauseMenuKeyPress(key);
                 }
                 break;
                 
@@ -740,12 +1028,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void handleMenuKeyPress(int key) {
         if (key == KeyEvent.VK_UP) {
             menuSelection = (menuSelection - 1 + 3) % 3; // Wrap around to bottom
-            playMenuSound("assets/sounds/menu_move.wav");
         } else if (key == KeyEvent.VK_DOWN) {
             menuSelection = (menuSelection + 1) % 3; // Wrap around to top
-            playMenuSound("assets/sounds/menu_move.wav");
         } else if (key == KeyEvent.VK_ENTER) {
-            playMenuSound("assets/sounds/menu_select.wav");
             switch (menuSelection) {
                 case 0: // Start Game
                     resetGame();
@@ -867,6 +1152,27 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             doorSound.play(false);
         } catch (Exception e) {
             System.out.println("Could not play door activation sound: " + e.getMessage());
+        }
+    }
+
+    private void handlePauseMenuKeyPress(int key) {
+        if (key == KeyEvent.VK_UP) {
+            pauseMenuSelection = (pauseMenuSelection - 1 + 3) % 3; // Wrap around to bottom
+        } else if (key == KeyEvent.VK_DOWN) {
+            pauseMenuSelection = (pauseMenuSelection + 1) % 3; // Wrap around to top
+        } else if (key == KeyEvent.VK_ENTER) {
+            switch (pauseMenuSelection) {
+                case 0: // Resume Game
+                    currentState = GameState.PLAYING;
+                    break;
+                case 1: // Controls
+                    currentState = GameState.CONTROLS;
+                    break;
+                case 2: // Exit
+                    resetGame();
+                    currentState = GameState.MENU;
+                    break;
+            }
         }
     }
 }
