@@ -92,8 +92,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         
         loadCurrentLevel();
 
-
-
         // Initialize background music
         // Note: Using WAV format as it's natively supported by Java Sound API
         // You can convert MP3 files to WAV using online converters or tools
@@ -102,8 +100,16 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         // Check if music file exists
         File file = new File(musicFile);
         if (file.exists()) {
-            backgroundMusic = new AudioPlayer(musicFile);
-            backgroundMusic.play(true); // Start playing in a loop
+            // Only create a new AudioPlayer if one doesn't exist or if it's not playing
+            if (backgroundMusic == null) {
+                backgroundMusic = new AudioPlayer(musicFile);
+                if (musicEnabled) {
+                    backgroundMusic.play(true); // Start playing in a loop
+                }
+            } else if (musicEnabled && !backgroundMusic.isPlaying()) {
+                // If music is enabled but not playing, start it
+                backgroundMusic.play(true);
+            }
         } else {
             System.out.println("Background music file not found: " + musicFile);
             System.out.println("Please place a WAV audio file at: " + musicFile);
@@ -348,7 +354,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void drawLevelInfo(Graphics g) {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 14));
-        g.drawString("Level: " + (levelManager.getCurrentLevelIndex() + 1), 10, 20);
+        
+        // Draw level number on the right side of the screen
+        String levelText = "Level: " + (levelManager.getCurrentLevelIndex() + 1);
+        FontMetrics metrics = g.getFontMetrics();
+        int levelTextWidth = metrics.stringWidth(levelText);
+        g.drawString(levelText, getWidth() - levelTextWidth - 20, 30);
         
         // Show message about killing enemies if door exists but is inactive
         Level currentLevel = levelManager.getCurrentLevel();
@@ -356,9 +367,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             g.setColor(new Color(255, 200, 0)); // Gold/yellow color
             g.setFont(new Font("Arial", Font.BOLD, 14));
             String message = "Kill all enemies to activate the door!";
-            FontMetrics metrics = g.getFontMetrics();
+            metrics = g.getFontMetrics();
             int x = (getWidth() - metrics.stringWidth(message)) / 2;
-            g.drawString(message, x, 40);
+            g.drawString(message, x, 50);
         }
     }
     
@@ -412,6 +423,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
     
     private void resetGame() {
+        // Stop the current background music before initializing a new game
+        if (backgroundMusic != null) {
+            backgroundMusic.stop();
+        }
+        
         initGame();
         gameOver = false;
     }
