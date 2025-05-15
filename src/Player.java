@@ -487,11 +487,11 @@ public class Player {
         int barY = 30; // Position moved down by 10 pixels
         
         // Background (empty health)
-        g.setColor(Color.RED);
+        g.setColor(new Color(241, 181, 133));
         g.fillRect(barX, barY, barWidth, barHeight);
         
         // Foreground (current health)
-        g.setColor(Color.GREEN);
+        g.setColor(new Color(212, 103,108));
         int currentWidth = (int)(((double)currentHP / maxHP) * barWidth);
         g.fillRect(barX, barY, currentWidth, barHeight);
         
@@ -517,11 +517,11 @@ public class Player {
         int barY = 60; // Position moved down by 10 pixels
         
         // Background (empty mana)
-        g.setColor(Color.GRAY);
+        g.setColor(new Color(241, 181, 133));
         g.fillRect(barX, barY, barWidth, barHeight);
         
         // Foreground (current mana)
-        g.setColor(Color.BLUE);
+        g.setColor(new Color(55, 23, 66));
         int currentWidth = (int)(((double)currentMana / maxMana) * barWidth);
         g.fillRect(barX, barY, currentWidth, barHeight);
         
