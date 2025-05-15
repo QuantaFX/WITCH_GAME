@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<level bg="../assets/Level_bg/Level1.png">
+<level bg="../assets/Level_bg/Level8.png">
   <platforms>
     <platform height="20" width="416" x="-353" y="130"/>
     <platform height="20" width="45" x="148" y="436"/>
